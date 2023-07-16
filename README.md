@@ -1,5 +1,5 @@
 # Single-Cell-Analysis
-# A comprehensive GitHub repository dedicated to single cell data analysis using the R Seurat package
+## A comprehensive GitHub repository dedicated to single cell data analysis using the R Seurat package
 
 
 ## Installing Necessary packages
