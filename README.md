@@ -2,7 +2,9 @@
 # A comprehensive GitHub repository dedicated to single cell data analysis using the R Seurat package
 
 
-#Installing Necessary packages
+## Installing Necessary packages
+
+```
 if (!require("BiocManager", quietly = TRUE))
 install.packages("BiocManager")
 install.packages('Seurat')
@@ -14,7 +16,7 @@ BiocManager::install("SingleR")
 BiocManager::install("SingleCellExperiment")
 BiocManager::install("celldex")
 BiocManager::install(c("GenomicFeatures", "AnnotationDbi"))
-
+```
 
 library(Seurat)
 library(dplyr)
