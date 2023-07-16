@@ -61,41 +61,35 @@ df <- subset(df, subset = nCount_RNA < 10000 & nFeature_RNA < 2000 & percent.mt 
 VlnPlot(df, features = c("nFeature_RNA","nCount_RNA","percent.mt","percent.rb"),ncol = 4,pt.size = 0.1)
 ```
 
+## Identifying Highly Variable Genes
 #Normalizing the data
 ```
 df <- NormalizeData(df, normalization.method = "LogNormalize")
-```
 
 #Identification of highly variable features
-```
 df <- FindVariableFeatures(df, selection.method = "vst", nfeatures = 2000)
-```
+
 #Identifying 10 most highly variable genes
-```
 top10 <- head(VariableFeatures(df), 10)
 top10
-```
+
 #ploting variable features with and without labels
-```
 plot1 <- VariableFeaturePlot(df)
 plot2 <- LabelPoints(plot = plot1, points = top10, repel =  TRUE)
 
 plot1
 plot2
 ```
+## Dimension Reduction
 #Scaling the data
 ```
 all.genes <- rownames(df)
 df <- ScaleData(df, features = all.genes)
-```
 
 #linear Dimension reduction
-```
 df <- RunPCA(df, features = VariableFeatures(object = df))
-```
 
 #Visualizing PCA results a few different ways
-```
 print(df[["pca"]], dims = 1:6, nfeatures = 5)
 
 VizDimLoadings(df, dims = 1:6, nfeatures = 15, reduction = "pca")
