@@ -81,8 +81,8 @@ plot1
 plot2
 ```
 ## Dimension Reduction
-#Scaling the data
 ```
+#Scaling the data
 all.genes <- rownames(df)
 df <- ScaleData(df, features = all.genes)
 
@@ -203,7 +203,8 @@ DimPlot(df, label = T , repel = T, label.size = 3) + NoLegend()
 levels(df)
 ```
 
-
+## Identifying Different Cell Types within a cluster
+```
 #identifying the different cell types of T/NK cells
 #subseting based on the clustering
 subset(x = df, idents = c("T_cells", "NK_cell"), invert = TRUE)
@@ -238,12 +239,12 @@ T_df <- SetIdent(T_df, value = "results_T.fine")
 
 #Visualizing the T/NK cells 
 DimPlot(T_df, label = T , repel = T, label.size = 3) + NoLegend()
+```
 
 
-
-##
+## Identifying differential marker genes
+```
 #Identifying differential marker gene for myeloid cells
-##
 myeloid <- subset(x = df, idents = c("Monocyte", "Neutrophils", "Macrophage", "Erythroblast", "Platelets"))
 myeloid.markers <- FindMarkers(myeloid, ident.1 = "Monocyte", ident.2 = "Neutrophils", ident.3 = "Macrophage", ident.4 = "Erythroblast", ident.5 = "Platelets")
 myeloid.markers
@@ -263,3 +264,4 @@ myeloid_top10_markers.de
 #saving into file
 write.csv(myeloid_top10_markers.de, file="myeloid_top10_markers.de.csv",quote = FALSE,row.names = F)
 
+```
