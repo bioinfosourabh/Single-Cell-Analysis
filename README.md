@@ -18,6 +18,8 @@ BiocManager::install("celldex")
 BiocManager::install(c("GenomicFeatures", "AnnotationDbi"))
 ```
 
+## Importing Libraries
+```
 library(Seurat)
 library(dplyr)
 library(patchwork)
@@ -25,6 +27,7 @@ library(SingleR)
 library(magrittr)
 library(RColorBrewer)
 library(ggplot2)
+```
 
 
 #loading dataset
