@@ -29,7 +29,8 @@ library(RColorBrewer)
 library(ggplot2)
 ```
 
-
+## Quality control
+```
 ###loading dataset
 data <- Read10X(data.dir = "path\\to\\single cell data")
 
@@ -43,25 +44,20 @@ df[["percent.mt"]] <- PercentageFeatureSet(df, pattern = "^MT-")
 df[["percent.rb"]] <- PercentageFeatureSet(df, pattern = "^RP[SL]")
 
 #Visualising QC metrices as violin plot
-```
 VlnPlot(df, features = c("nFeature_RNA","nCount_RNA","percent.mt","percent.rb"),ncol = 4,pt.size = 0.1)
-```
 
 #FeatureScatter plots for feature-feature relationships
-```
+
 plot1 <- FeatureScatter(df, feature1 = "nCount_RNA", feature2 = "percent.mt")
 plot2 <- FeatureScatter(df, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
 plot1 + plot2
 plot3 <- FeatureScatter(df, feature1 = "nCount_RNA", feature2 = "percent.rb")
 plot3
-```
 
 #filtering based on QC metrices  
-```
 df <- subset(df, subset = nCount_RNA < 10000 & nFeature_RNA < 2000 & percent.mt < 10 & percent.rb < 40)
-```
+
 #visualizing filtered data
-```
 VlnPlot(df, features = c("nFeature_RNA","nCount_RNA","percent.mt","percent.rb"),ncol = 4,pt.size = 0.1)
 ```
 
