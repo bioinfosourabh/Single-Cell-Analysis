@@ -62,8 +62,8 @@ VlnPlot(df, features = c("nFeature_RNA","nCount_RNA","percent.mt","percent.rb"),
 ```
 
 ## Identifying Highly Variable Genes
-#Normalizing the data
 ```
+#Normalizing the data
 df <- NormalizeData(df, normalization.method = "LogNormalize")
 
 #Identification of highly variable features
