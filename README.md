@@ -111,63 +111,64 @@ DimHeatmap(df, dims = 1, cells = 500, balanced = TRUE)
 ElbowPlot(df)
 ```
 
-#Clustering the cells
+## Clustering the cells
 ```
 df <- FindNeighbors(df, dims = 1:10)
 df <- FindClusters(df, resolution = 0.5)
-```
+
 #Cluster IDs of the first 5 cells
-```
 head(Idents(df), 5)
-```
+
 #Run non-linear dimensional reduction (UMAP)
-```
 df <- RunUMAP(df, dims = 1:10, verbose = F)
 
 table(df@meta.data$seurat_clusters)
-```
+
 #individual clusters
-```
 DimPlot(df, label = T)
 ```
-#finding all markers of cluster 1
+
+## Finding markers of clusters
 ```
+## finding all markers of cluster 1
 cluster1.markers <- FindMarkers(df, ident.1 = 1, min.pct = 0.25)
 head(cluster1.markers, n = 5) 
 
 VlnPlot(df, features = c(row.names(cluster1.markers)[1], row.names(cluster1.markers)[2]))
-```
+
 #finding markers for every cluster
-```
 df.markers <- FindAllMarkers(df, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.25)
 df.markers
-```
+
+
 #identifying top 3 marker genes for each cluster
-```
+
 x <- df.markers %>% group_by(cluster) %>% top_n(n=3, wt= avg_log2FC)
 ```
-#plotting top marker gene of each cluster on UMAP
+
+## Plotting marker genes
 ```
+#Plotting top marker gene of each cluster on UMAP
 x <- df.markers %>% group_by(cluster) %>% top_n(n=1, wt= avg_log2FC)
 FeaturePlot(df, features = x$gene[1:4])
 FeaturePlot(df, features = x$gene[5:8])
 FeaturePlot(df, features = x$gene[9:12])
-```
 
-#Plotting marker gene of different cells on UMAP based on previously reported markers and PanglaoDB.
+
+#Plotting marker gene of different cells on UMAP based on previously reported markers and PanglaoDB 
 #Plot for Fibroblasts
-```
+
 FeaturePlot(df,"COL6A2") + 
   scale_colour_gradientn(colours = rev(brewer.pal(n = 11, name = "Spectral"))) + ggtitle("COL6A2: Fibroblasts")
-```
+  
 
 #Plot for  T Cells
-```
+
 FeaturePlot(df,"IL7R") + 
   scale_colour_gradientn(colours = rev(brewer.pal(n = 11, name = "Spectral"))) + ggtitle("IL7R: CD4 T Cells")
-```
+
 #Plot for Epithelial Cells
-```
+
 FeaturePlot(df,"KRT14") + 
   scale_colour_gradientn(colours = rev(brewer.pal(n = 11, name = "Spectral"))) + ggtitle("KRT14: Epithelial Cells")
 
@@ -177,9 +178,10 @@ FeaturePlot(df, features = filtered_x$gene[1:3])
 
 filtered_x <- x[x$cluster == 3, ]
 FeaturePlot(df, features = filtered_x$gene[1:3])
+```
 
-
-#Cell type annotation using SingleR
+## Cell type annotation using SingleR
+```
 #using Human Primary Cell Atlas Data as reference
 ref <- celldex::HumanPrimaryCellAtlasData()
 ref
@@ -209,9 +211,9 @@ df <- SetIdent(df, value = "results.main")
 DimPlot(df, label = T , repel = T, label.size = 3) + NoLegend()
 
 levels(df)
+```
 
 
-#
 #identifying the different cell types of T/NK cells
 #subseting based on the clustering
 subset(x = df, idents = c("T_cells", "NK_cell"), invert = TRUE)
