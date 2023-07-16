@@ -30,15 +30,15 @@ library(ggplot2)
 ```
 
 
-#loading dataset
-data <- Read10X(data.dir = "C:\\Users\\Sourabh\\OneDrive\\Documents\\R\\single")
+###loading dataset
+data <- Read10X(data.dir = "path\\to\\single cell data")
 
-#Initializing seurat object 
+###Initializing seurat object 
 df <- CreateSeuratObject(counts = data, project = "phd", min.cells = 3, min.features = 200)
 
 data <- NULL
 
-#Quality control metrices
+### Quality control metrices
 df[["percent.mt"]] <- PercentageFeatureSet(df, pattern = "^MT-")
 df[["percent.rb"]] <- PercentageFeatureSet(df, pattern = "^RP[SL]")
 
