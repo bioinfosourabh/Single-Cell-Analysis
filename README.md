@@ -43,46 +43,63 @@ df[["percent.mt"]] <- PercentageFeatureSet(df, pattern = "^MT-")
 df[["percent.rb"]] <- PercentageFeatureSet(df, pattern = "^RP[SL]")
 
 #Visualising QC metrices as violin plot
+```
 VlnPlot(df, features = c("nFeature_RNA","nCount_RNA","percent.mt","percent.rb"),ncol = 4,pt.size = 0.1)
+```
 
 #FeatureScatter plots for feature-feature relationships
+```
 plot1 <- FeatureScatter(df, feature1 = "nCount_RNA", feature2 = "percent.mt")
 plot2 <- FeatureScatter(df, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
 plot1 + plot2
 plot3 <- FeatureScatter(df, feature1 = "nCount_RNA", feature2 = "percent.rb")
 plot3
+```
 
 #filtering based on QC metrices  
+```
 df <- subset(df, subset = nCount_RNA < 10000 & nFeature_RNA < 2000 & percent.mt < 10 & percent.rb < 40)
+```
 #visualizing filtered data
+```
 VlnPlot(df, features = c("nFeature_RNA","nCount_RNA","percent.mt","percent.rb"),ncol = 4,pt.size = 0.1)
-
+```
 
 #Normalizing the data
+```
 df <- NormalizeData(df, normalization.method = "LogNormalize")
+```
 
 #Identification of highly variable features
+```
 df <- FindVariableFeatures(df, selection.method = "vst", nfeatures = 2000)
-
+```
 #Identifying 10 most highly variable genes
+```
 top10 <- head(VariableFeatures(df), 10)
 top10
-
+```
 #ploting variable features with and without labels
+```
 plot1 <- VariableFeaturePlot(df)
 plot2 <- LabelPoints(plot = plot1, points = top10, repel =  TRUE)
 
 plot1
 plot2
-
+```
 #Scaling the data
+```
 all.genes <- rownames(df)
 df <- ScaleData(df, features = all.genes)
+```
 
 #linear Dimension reduction
+```
 df <- RunPCA(df, features = VariableFeatures(object = df))
+```
 
 #Visualizing PCA results a few different ways
+```
 print(df[["pca"]], dims = 1:6, nfeatures = 5)
 
 VizDimLoadings(df, dims = 1:6, nfeatures = 15, reduction = "pca")
@@ -92,52 +109,65 @@ DimPlot(df, reduction = "pca")
 DimHeatmap(df, dims = 1, cells = 500, balanced = TRUE)
 
 ElbowPlot(df)
-
+```
 
 #Clustering the cells
+```
 df <- FindNeighbors(df, dims = 1:10)
 df <- FindClusters(df, resolution = 0.5)
-
+```
 #Cluster IDs of the first 5 cells
+```
 head(Idents(df), 5)
-
+```
 #Run non-linear dimensional reduction (UMAP)
+```
 df <- RunUMAP(df, dims = 1:10, verbose = F)
 
 table(df@meta.data$seurat_clusters)
-
-# individual clusters
+```
+#individual clusters
+```
 DimPlot(df, label = T)
-
+```
 #finding all markers of cluster 1
+```
 cluster1.markers <- FindMarkers(df, ident.1 = 1, min.pct = 0.25)
 head(cluster1.markers, n = 5) 
 
 VlnPlot(df, features = c(row.names(cluster1.markers)[1], row.names(cluster1.markers)[2]))
-
+```
 #finding markers for every cluster
+```
 df.markers <- FindAllMarkers(df, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.25)
 df.markers
-
+```
 #identifying top 3 marker genes for each cluster
+```
 x <- df.markers %>% group_by(cluster) %>% top_n(n=3, wt= avg_log2FC)
-
+```
 #plotting top marker gene of each cluster on UMAP
+```
 x <- df.markers %>% group_by(cluster) %>% top_n(n=1, wt= avg_log2FC)
 FeaturePlot(df, features = x$gene[1:4])
 FeaturePlot(df, features = x$gene[5:8])
 FeaturePlot(df, features = x$gene[9:12])
+```
 
 #Plotting marker gene of different cells on UMAP based on previously reported markers and PanglaoDB.
 #Plot for Fibroblasts
+```
 FeaturePlot(df,"COL6A2") + 
   scale_colour_gradientn(colours = rev(brewer.pal(n = 11, name = "Spectral"))) + ggtitle("COL6A2: Fibroblasts")
+```
 
 #Plot for  T Cells
+```
 FeaturePlot(df,"IL7R") + 
   scale_colour_gradientn(colours = rev(brewer.pal(n = 11, name = "Spectral"))) + ggtitle("IL7R: CD4 T Cells")
-
+```
 #Plot for Epithelial Cells
+```
 FeaturePlot(df,"KRT14") + 
   scale_colour_gradientn(colours = rev(brewer.pal(n = 11, name = "Spectral"))) + ggtitle("KRT14: Epithelial Cells")
 
