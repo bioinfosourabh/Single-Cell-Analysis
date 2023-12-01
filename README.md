@@ -4,7 +4,7 @@
 
 ## Installing Necessary packages
 
-```
+```r
 if (!require("BiocManager", quietly = TRUE))
 install.packages("BiocManager")
 install.packages('Seurat')
