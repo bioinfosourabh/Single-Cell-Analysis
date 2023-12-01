@@ -19,7 +19,7 @@ BiocManager::install(c("GenomicFeatures", "AnnotationDbi"))
 ```
 
 ## Importing Libraries
-```
+```r
 library(Seurat)
 library(dplyr)
 library(patchwork)
@@ -30,7 +30,7 @@ library(ggplot2)
 ```
 
 ## Quality control
-```
+```r
 ###loading dataset
 data <- Read10X(data.dir = "path\\to\\single cell data")
 
@@ -62,7 +62,7 @@ VlnPlot(df, features = c("nFeature_RNA","nCount_RNA","percent.mt","percent.rb"),
 ```
 
 ## Identifying Highly Variable Genes
-```
+```r
 #Normalizing the data
 df <- NormalizeData(df, normalization.method = "LogNormalize")
 
@@ -81,7 +81,7 @@ plot1
 plot2
 ```
 ## Dimension Reduction
-```
+```r
 #Scaling the data
 all.genes <- rownames(df)
 df <- ScaleData(df, features = all.genes)
@@ -102,7 +102,7 @@ ElbowPlot(df)
 ```
 
 ## Clustering the cells
-```
+```r
 df <- FindNeighbors(df, dims = 1:10)
 df <- FindClusters(df, resolution = 0.5)
 
@@ -119,7 +119,7 @@ DimPlot(df, label = T)
 ```
 
 ## Finding markers of clusters
-```
+```r
 ## finding all markers of cluster 1
 cluster1.markers <- FindMarkers(df, ident.1 = 1, min.pct = 0.25)
 head(cluster1.markers, n = 5) 
@@ -137,7 +137,7 @@ x <- df.markers %>% group_by(cluster) %>% top_n(n=3, wt= avg_log2FC)
 ```
 
 ## Plotting marker genes
-```
+```r
 #Plotting top marker gene of each cluster on UMAP
 x <- df.markers %>% group_by(cluster) %>% top_n(n=1, wt= avg_log2FC)
 FeaturePlot(df, features = x$gene[1:4])
@@ -171,7 +171,7 @@ FeaturePlot(df, features = filtered_x$gene[1:3])
 ```
 
 ## Cell type annotation using SingleR
-```
+```r
 #using Human Primary Cell Atlas Data as reference
 ref <- celldex::HumanPrimaryCellAtlasData()
 ref
@@ -204,7 +204,7 @@ levels(df)
 ```
 
 ## Identifying Different Cell Types within a cluster
-```
+```r
 #identifying the different cell types of T/NK cells
 #subseting based on the clustering
 subset(x = df, idents = c("T_cells", "NK_cell"), invert = TRUE)
@@ -243,7 +243,7 @@ DimPlot(T_df, label = T , repel = T, label.size = 3) + NoLegend()
 
 
 ## Identifying differential marker genes
-```
+```r
 #Identifying differential marker gene for myeloid cells
 myeloid <- subset(x = df, idents = c("Monocyte", "Neutrophils", "Macrophage", "Erythroblast", "Platelets"))
 myeloid.markers <- FindMarkers(myeloid, ident.1 = "Monocyte", ident.2 = "Neutrophils", ident.3 = "Macrophage", ident.4 = "Erythroblast", ident.5 = "Platelets")
