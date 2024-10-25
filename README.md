@@ -45,7 +45,7 @@ df[["percent.rb"]] <- PercentageFeatureSet(df, pattern = "^RP[SL]")
 
 #Visualising QC metrices as violin plot
 VlnPlot(df, features = c("nFeature_RNA","nCount_RNA","percent.mt","percent.rb"),ncol = 4,pt.size = 0.1)
-![Violin Plot of Quality Control Metrics](https://drive.google.com/file/d/1gFh87HuQjBCd6PIa-aWfWrppuC5FO2zW/view?usp=drive_link)
+![Violin Plot of Quality Control Metrics](https://drive.google.com/uc?id=1gFh87HuQjBCd6PIa-aWfWrppuC5FO2zW)
 #FeatureScatter plots for feature-feature relationships
 
 plot1 <- FeatureScatter(df, feature1 = "nCount_RNA", feature2 = "percent.mt")
