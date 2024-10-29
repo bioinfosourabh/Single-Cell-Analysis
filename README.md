@@ -1,4 +1,4 @@
-# Single-Cell-Analysis
+ # Single-Cell-Analysis
 ## A comprehensive GitHub repository dedicated to single cell data analysis using the R Seurat package
 
 
@@ -45,7 +45,10 @@ df[["percent.rb"]] <- PercentageFeatureSet(df, pattern = "^RP[SL]")
 
 #Visualising QC metrices as violin plot
 VlnPlot(df, features = c("nFeature_RNA","nCount_RNA","percent.mt","percent.rb"),ncol = 4,pt.size = 0.1)
+```
+
 ![Violin Plot of Quality Control Metrics](https://drive.google.com/uc?id=1gFh87HuQjBCd6PIa-aWfWrppuC5FO2zW)
+```r
 #FeatureScatter plots for feature-feature relationships
 
 plot1 <- FeatureScatter(df, feature1 = "nCount_RNA", feature2 = "percent.mt")
