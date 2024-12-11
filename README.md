@@ -92,8 +92,7 @@ VlnPlot(df, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.rb
   ggtitle("Quality Control Metrics After Filtering")
 ```
 ![Scatter plots for QC metric relationships](https://drive.google.com/file/d/1gUXBIrhIEPsvwCByVYSXQLvYEylJQD7-/view?usp=drive_link)
-```r
-```
+
 
 ## Identifying Highly Variable Genes
 ```r
