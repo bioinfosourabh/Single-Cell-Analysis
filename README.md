@@ -31,38 +31,63 @@ library(ggplot2)
 
 ## Quality control
 ```r
-###loading dataset
-data <- Read10X(data.dir = "path\\to\\single cell data")
+### Step 1: Load the Dataset
+# Define the path to the dataset
+data_path <- "C:/Users/Sourabh/OneDrive/Documents/R/single"
 
-###Initializing seurat object 
-df <- CreateSeuratObject(counts = data, project = "phd", min.cells = 3, min.features = 200)
+# Load the raw count matrix using Read10X
+data <- Read10X(data.dir = data_path)
 
-data <- NULL
+# Replace underscores with dashes in feature names
+rownames(data) <- gsub("_", "-", rownames(data))
 
-### Quality control metrices
+### Step 2: Initialize Seurat Object
+# Create a Seurat object with basic filtering for low-quality cells
+df <- CreateSeuratObject(counts = data, project = "sc_project", min.cells = 3, min.features = 200)
+
+# Clear large data object to free memory
+rm(data)
+
+### Step 3: Calculate Quality Control (QC) Metrics
+# Calculate mitochondrial gene percentage
 df[["percent.mt"]] <- PercentageFeatureSet(df, pattern = "^MT-")
+
+# Calculate ribosomal gene percentage
 df[["percent.rb"]] <- PercentageFeatureSet(df, pattern = "^RP[SL]")
 
-#Visualising QC metrices as violin plot
-VlnPlot(df, features = c("nFeature_RNA","nCount_RNA","percent.mt","percent.rb"),ncol = 4,pt.size = 0.1)
+### Step 4: Visualize Initial QC Metrics
+# Violin plots for QC metrics to inspect distributions
+VlnPlot(df, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.rb"), 
+        ncol = 4, pt.size = 0.1, assay = "RNA", layer = "counts") +
+  ggtitle("Initial Quality Control Metrics")
 ```
 
 ![Violin Plot of Quality Control Metrics](https://drive.google.com/uc?id=1gFh87HuQjBCd6PIa-aWfWrppuC5FO2zW)
 ```r
-#FeatureScatter plots for feature-feature relationships
+# Scatter plots for QC metric relationships
+plot1 <- FeatureScatter(df, feature1 = "nCount_RNA", feature2 = "percent.mt") + 
+  ggtitle("RNA Count vs Mitochondrial Percentage") + theme_minimal()
 
-plot1 <- FeatureScatter(df, feature1 = "nCount_RNA", feature2 = "percent.mt")
-plot2 <- FeatureScatter(df, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
-plot1 + plot2
-plot3 <- FeatureScatter(df, feature1 = "nCount_RNA", feature2 = "percent.rb")
-plot3
+plot2 <- FeatureScatter(df, feature1 = "nCount_RNA", feature2 = "nFeature_RNA") + 
+  ggtitle("RNA Count vs Feature Count") + theme_minimal()
 
-#filtering based on QC metrices  
-df <- subset(df, subset = nCount_RNA < 10000 & nFeature_RNA < 2000 & percent.mt < 10 & percent.rb < 40)
+plot3 <- FeatureScatter(df, feature1 = "nCount_RNA", feature2 = "percent.rb") + 
+  ggtitle("RNA Count vs Ribosomal Percentage") + theme_minimal()
 
-#visualizing filtered data
-VlnPlot(df, features = c("nFeature_RNA","nCount_RNA","percent.mt","percent.rb"),ncol = 4,pt.size = 0.1)
-```
+plot1 + plot2 + plot3
+
+### Step 5: Filter Based on QC Metrics
+# Filter cells based on observed QC thresholds
+df <- subset(df, subset = nCount_RNA < 75000 & 
+                          nFeature_RNA < 5000 & 
+                          percent.mt < 15 & 
+                          percent.rb < 50)
+
+### Step 6: Visualize QC Metrics After Filtering
+# Violin plots for QC metrics post-filtering
+VlnPlot(df, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.rb"), 
+        ncol = 4, pt.size = 0.1, assay = "RNA", layer = "counts") +
+  ggtitle("Quality Control Metrics After Filtering")```
 
 ## Identifying Highly Variable Genes
 ```r
