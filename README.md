@@ -88,6 +88,7 @@ df <- subset(df, subset = nCount_RNA < 75000 &
 VlnPlot(df, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.rb"), 
         ncol = 4, pt.size = 0.1, assay = "RNA", layer = "counts") +
   ggtitle("Quality Control Metrics After Filtering")```
+```
 
 ## Identifying Highly Variable Genes
 ```r
