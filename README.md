@@ -76,7 +76,7 @@ plot3 <- FeatureScatter(df, feature1 = "nCount_RNA", feature2 = "percent.rb") +
 
 plot1 + plot2 + plot3
 ```
-![Scatter plots for QC metric relationships](https://drive.google.com/file/d/1gUXBIrhIEPsvwCByVYSXQLvYEylJQD7-/view?usp=drive_link)
+![Scatter plots for QC metric relationships](Visualizations/QC_Metric_relationships.png)
 ```r
 ### Step 5: Filter Based on QC Metrics
 # Filter cells based on observed QC thresholds
@@ -91,7 +91,7 @@ VlnPlot(df, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.rb
         ncol = 4, pt.size = 0.1, assay = "RNA", layer = "counts") +
   ggtitle("Quality Control Metrics After Filtering")
 ```
-![Scatter plots for QC metric relationships](https://drive.google.com/file/d/1gUXBIrhIEPsvwCByVYSXQLvYEylJQD7-/view?usp=drive_link)
+![ QC Metrics After Filtering](Visualizations/After_filtering.png)
 
 
 ## Identifying Highly Variable Genes
