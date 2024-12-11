@@ -62,7 +62,7 @@ VlnPlot(df, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.rb
   ggtitle("Initial Quality Control Metrics")
 ```
 
-![Violin Plot of Quality Control Metrics](https://drive.google.com/file/d/1b0tsM_I4OnbfjxP24ANblpeeDL3v9MxK/view?usp=drive_link)
+![Violin Plot of Quality Control Metrics](Visualizations/Pre_filter.png)
 ```r
 # Scatter plots for QC metric relationships
 plot1 <- FeatureScatter(df, feature1 = "nCount_RNA", feature2 = "percent.mt") + 
