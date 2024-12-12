@@ -182,20 +182,45 @@ ElbowPlot(df) +
 
 ## Clustering the cells
 ```r
+### Step: Clustering and Dimensional Reduction
+
+#### Step 1: Find Neighbors and Identify Clusters
+
+# Identify neighbors using the first 10 principal components
 df <- FindNeighbors(df, dims = 1:10)
+
+# Perform clustering with a resolution of 0.5
 df <- FindClusters(df, resolution = 0.5)
 
-#Cluster IDs of the first 5 cells
+# Display cluster IDs for the first 5 cells
 head(Idents(df), 5)
 
-#Run non-linear dimensional reduction (UMAP)
-df <- RunUMAP(df, dims = 1:10, verbose = F)
+#### Step 2: Run Dimensional Reduction (UMAP and t-SNE)
 
+# Run UMAP for non-linear dimensional reduction
+df <- RunUMAP(df, dims = 1:10, verbose = FALSE)
+
+# Run t-SNE for an alternative dimensional reduction
+df <- RunTSNE(df, dims = 1:10, verbose = FALSE)
+
+#### Step 3: Explore Cluster Metadata
+
+# Display the number of cells per cluster
 table(df@meta.data$seurat_clusters)
 
-#individual clusters
-DimPlot(df, label = T)
+#### Step 4: Visualize Clusters Using UMAP and t-SNE
+
+# UMAP plot with cluster labels
+DimPlot(df, reduction = "umap", label = TRUE, repel = TRUE) + 
+  ggtitle("UMAP of Clusters")
 ```
+![UMAP plot with cluster labels](Visualizations/UMAP_Clusters.png)
+```r
+# t-SNE plot with cluster labels
+DimPlot(df, reduction = "tsne", label = TRUE, repel = TRUE) + 
+  ggtitle("t-SNE of Clusters")
+```
+![t-SNE plot with cluster labels](Visualizations/t-SNE_Clusters.png)
 
 ## Finding markers of clusters
 ```r
