@@ -128,24 +128,57 @@ plot2
 
 ## Dimension Reduction
 ```r
-#Scaling the data
-all.genes <- rownames(df)
-df <- ScaleData(df, features = all.genes)
+### Step: Principal Component Analysis (PCA) and Visualization
 
-#linear Dimension reduction
+#### Step 1: Scale the Data
+
+# Scale only the variable features to reduce noise and improve computation time
+df <- ScaleData(df, features = VariableFeatures(object = df))
+
+#### Step 2: Perform PCA
+
+# Run PCA on the scaled variable features
 df <- RunPCA(df, features = VariableFeatures(object = df))
 
-#Visualizing PCA results a few different ways
+#### Step 3: View Top Genes Contributing to PCs
+
+# Display the most important genes contributing to the top 6 principal components
+print("Top genes contributing to the first 6 principal components:")
 print(df[["pca"]], dims = 1:6, nfeatures = 5)
 
-VizDimLoadings(df, dims = 1:6, nfeatures = 15, reduction = "pca")
+#### Step 4: Visualize PCA Loadings
 
-DimPlot(df, reduction = "pca")
-
-DimHeatmap(df, dims = 1, cells = 500, balanced = TRUE)
-
-ElbowPlot(df)
+# Plot the top 15 genes contributing to each of the first 6 PCs
+VizDimLoadings(df, dims = 1:6, nfeatures = 15, reduction = "pca") + 
+  ggtitle("Top Genes in PCA Loadings")
 ```
+![Top Genes in PCA Loadings](Visualizations/PCA loadings.png)
+```r
+#### Step 5: PCA Plot
+
+# Visualize the PCA results in a basic PCA plot
+DimPlot(df, reduction = "pca") + 
+  ggtitle("PCA Plot")
+```
+![PCA Plot](Visualizations/PCA_Plot.png)
+```r
+
+#### Step 6: Dimensional Heatmap
+
+# Dimensional heatmap for the first 2 PCs with a subset of 500 cells for clarity
+DimHeatmap(df, dims = 1:2, cells = 500, balanced = TRUE)
+```
+![Dimensional heatmap](Visualizations/Dimheatmap for first 2 PC.png)
+```r
+
+#### Step 7: Determine Optimal Number of PCs
+
+# Elbow plot to determine the optimal number of principal components
+ElbowPlot(df) + 
+  ggtitle("Elbow Plot - PCA")
+```
+![Dimensional heatmap](Visualizations/ElbowPlot - PCA.png)
+
 
 ## Clustering the cells
 ```r
