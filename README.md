@@ -224,55 +224,97 @@ DimPlot(df, reduction = "tsne", label = TRUE, repel = TRUE) +
 
 ## Finding markers of clusters
 ```r
-## finding all markers of cluster 1
+### Step: Identify Cluster-Specific Markers
+
+#### Step 1: Find Markers for Cluster 1
+
+# Identify markers for cluster 1 with a minimum expression percentage of 25%
 cluster1.markers <- FindMarkers(df, ident.1 = 1, min.pct = 0.25)
-head(cluster1.markers, n = 5) 
 
+# Display the top 5 markers for cluster 1
+head(cluster1.markers, n = 5)
+
+#### Step 2: Visualize Top Markers for Cluster 1
+
+# Violin plot for the top 2 markers of cluster 1
 VlnPlot(df, features = c(row.names(cluster1.markers)[1], row.names(cluster1.markers)[2]))
+```
+![Violin plot for the top 2 markers of cluster 1](Visualizations/UMAP_Clusters.png)
+```r
+#### Step 3: Find Markers for All Clusters
 
-#finding markers for every cluster
-df.markers <- FindAllMarkers(df, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.25)
-df.markers
+# Identify markers for all clusters with a log-fold change threshold of 0.5
+df.markers <- FindAllMarkers(df, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.5) %>%
+  filter(p_val_adj < 0.05)  # Optional: Filter markers by adjusted p-value
 
+#### Step 4: Identify Top Markers for Each Cluster
 
-#identifying top 3 marker genes for each cluster
-
-x <- df.markers %>% group_by(cluster) %>% top_n(n=3, wt= avg_log2FC)
+# Get the top 3 marker genes for each cluster based on average log-fold change
+top_markers <- df.markers %>% 
+  group_by(cluster) %>% 
+  top_n(n = 3, wt = avg_log2FC)
 ```
 
 ## Plotting marker genes
 ```r
-#Plotting top marker gene of each cluster on UMAP
-x <- df.markers %>% group_by(cluster) %>% top_n(n=1, wt= avg_log2FC)
-FeaturePlot(df, features = x$gene[1:4])
-FeaturePlot(df, features = x$gene[5:8])
-FeaturePlot(df, features = x$gene[9:12])
+### Step: Visualize Marker Genes on UMAP
 
+#### Step 1: Plot Top Marker Gene of Each Cluster
 
-#Plotting marker gene of different cells on UMAP based on previously reported markers and PanglaoDB 
-#Plot for Fibroblasts
+# Identify the top marker gene for each cluster
+top_markers_1 <- df.markers %>% 
+  group_by(cluster) %>% 
+  top_n(n = 1, wt = avg_log2FC)
 
-FeaturePlot(df,"COL6A2") + 
-  scale_colour_gradientn(colours = rev(brewer.pal(n = 11, name = "Spectral"))) + ggtitle("COL6A2: Fibroblasts")
-  
+# Plot the top marker genes for the first 12 clusters in groups of 4
+FeaturePlot(df, features = top_markers_1$gene[1:4])
+FeaturePlot(df, features = top_markers_1$gene[5:8])
+FeaturePlot(df, features = top_markers_1$gene[9:12])
+```
+![Top marker genes](Visualizations/Top_marker_genes.png)
+```r
+#### Step 2: Visualize Known Cell Type Markers from PanglaoDB
 
-#Plot for  T Cells
+# Plot for Fibroblasts (COL6A2)
+FeaturePlot(df, "COL6A2") + 
+  scale_colour_gradientn(colours = rev(brewer.pal(n = 11, name = "Spectral"))) + 
+  ggtitle("COL6A2: Fibroblasts")
+```
+![Fibroblasts](Visualizations/Fibroblasts.png)
+```r
 
-FeaturePlot(df,"IL7R") + 
-  scale_colour_gradientn(colours = rev(brewer.pal(n = 11, name = "Spectral"))) + ggtitle("IL7R: CD4 T Cells")
+# Plot for T Cells (IL7R)
+FeaturePlot(df, "IL7R") + 
+  scale_colour_gradientn(colours = rev(brewer.pal(n = 11, name = "Spectral"))) + 
+  ggtitle("IL7R: CD4 T Cells")
+```
+![T Cells](Visualizations/T_Cells.png)
+```r
 
-#Plot for Epithelial Cells
+# Plot for Epithelial Cells (KRT14)
+FeaturePlot(df, "KRT14") + 
+  scale_colour_gradientn(colours = rev(brewer.pal(n = 11, name = "Spectral"))) + 
+  ggtitle("KRT14: Epithelial Cells")
+```
+![Epithelial Cells](Visualizations/Epithelial_Cells.png)
+```r
 
-FeaturePlot(df,"KRT14") + 
-  scale_colour_gradientn(colours = rev(brewer.pal(n = 11, name = "Spectral"))) + ggtitle("KRT14: Epithelial Cells")
+#### Step 3: Plot Top 3 Marker Genes for Specific Clusters
 
-
-filtered_x <- x[x$cluster == 0, ]
-FeaturePlot(df, features = filtered_x$gene[1:3])
-
-filtered_x <- x[x$cluster == 3, ]
+# Plot top 3 marker genes for cluster 0
+filtered_x <- top_markers %>% filter(cluster == 0)
 FeaturePlot(df, features = filtered_x$gene[1:3])
 ```
+![Top 3 marker genes for cluster 0](Visualizations/Top_3_marker_genes_for_cluster_0.png)
+
+```r
+# Plot top 3 marker genes for cluster 3
+filtered_x <- top_markers %>% filter(cluster == 3)
+FeaturePlot(df, features = filtered_x$gene[1:3])
+```
+![Top 3 marker genes for cluster 3](Visualizations/Top_3_marker_genes_for_cluster_3.png)
+
+
 
 ## Cell type annotation using SingleR
 ```r
