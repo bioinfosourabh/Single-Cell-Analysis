@@ -152,7 +152,7 @@ print(df[["pca"]], dims = 1:6, nfeatures = 5)
 VizDimLoadings(df, dims = 1:6, nfeatures = 15, reduction = "pca") + 
   ggtitle("Top Genes in PCA Loadings")
 ```
-![Top Genes in PCA Loadings](Visualizations/PCA loadings.png)
+![Top Genes in PCA Loadings](Visualizations/PCA_loadings.png)
 ```r
 #### Step 5: PCA Plot
 
@@ -168,7 +168,7 @@ DimPlot(df, reduction = "pca") +
 # Dimensional heatmap for the first 2 PCs with a subset of 500 cells for clarity
 DimHeatmap(df, dims = 1:2, cells = 500, balanced = TRUE)
 ```
-![Dimensional heatmap](Visualizations/Dimheatmap for first 2 PC.png)
+![Dimensional heatmap](Visualizations/Dimheatmap_for_first_2_PC.png)
 ```r
 
 #### Step 7: Determine Optimal Number of PCs
@@ -177,7 +177,7 @@ DimHeatmap(df, dims = 1:2, cells = 500, balanced = TRUE)
 ElbowPlot(df) + 
   ggtitle("Elbow Plot - PCA")
 ```
-![Dimensional heatmap](Visualizations/ElbowPlot - PCA.png)
+![Dimensional heatmap](Visualizations/ElbowPlot_PCA.png)
 
 
 ## Clustering the cells
