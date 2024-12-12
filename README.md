@@ -96,23 +96,36 @@ VlnPlot(df, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.rb
 
 ## Identifying Highly Variable Genes
 ```r
-#Normalizing the data
-df <- NormalizeData(df, normalization.method = "LogNormalize")
+### Step 1: Normalize the Data
 
-#Identification of highly variable features
-df <- FindVariableFeatures(df, selection.method = "vst", nfeatures = 2000)
+# Log-normalize the data
+df <- NormalizeData(df, normalization.method = "LogNormalize", scale.factor = 10000)
 
-#Identifying 10 most highly variable genes
+### Step 2: Normalization and Identification of Highly Variable Features
+
+# Identify highly variable features using the 'vst' method
+df <- FindVariableFeatures(df, selection.method = "vst", nfeatures = 3000)
+
+# Extract the top 10 most highly variable genes
 top10 <- head(VariableFeatures(df), 10)
-top10
+print(top10)
 
-#ploting variable features with and without labels
-plot1 <- VariableFeaturePlot(df)
-plot2 <- LabelPoints(plot = plot1, points = top10, repel =  TRUE)
+### Step 3: Visualize Highly Variable Features
 
-plot1
+# Plot variable features with log transformation to handle zeros safely
+plot1 <- VariableFeaturePlot(df) + 
+  scale_x_continuous(trans = "log1p") + 
+  ggtitle("Highly Variable Features") + 
+  theme_minimal()
+
+# Label the top 10 variable genes
+plot2 <- LabelPoints(plot = plot1, points = top10, repel = TRUE, xnudge = 0, ynudge = 0, max.overlaps = 10)
+
+# Display the plot
 plot2
 ```
+![Highly Variable Genes](Visualizations/Highly_Variable_Features.png)
+
 ## Dimension Reduction
 ```r
 #Scaling the data
