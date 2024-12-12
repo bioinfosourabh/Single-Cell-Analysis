@@ -126,7 +126,7 @@ plot2
 ```
 ![Highly Variable Genes](Visualizations/Highly_Variable_Features.png)
 
-## Dimension Reduction
+## Dimension Reduction : Principal Component Analysis (PCA) and Visualization
 ```r
 ### Step: Principal Component Analysis (PCA) and Visualization
 
