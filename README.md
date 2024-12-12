@@ -239,7 +239,7 @@ head(cluster1.markers, n = 5)
 # Violin plot for the top 2 markers of cluster 1
 VlnPlot(df, features = c(row.names(cluster1.markers)[1], row.names(cluster1.markers)[2]))
 ```
-![Violin plot for the top 2 markers of cluster 1](Visualizations/UMAP_Clusters.png)
+![Violin plot for the top 2 markers of cluster 1](Visualizations/Violin_plot_for_top_2_markers_of_cluster_1.png)
 ```r
 #### Step 3: Find Markers for All Clusters
 
