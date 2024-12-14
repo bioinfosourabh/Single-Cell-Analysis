@@ -318,35 +318,94 @@ FeaturePlot(df, features = filtered_x$gene[1:3])
 
 ## Cell type annotation using SingleR
 ```r
-#using Human Primary Cell Atlas Data as reference
-ref <- celldex::HumanPrimaryCellAtlasData()
-ref
-colData(ref)
+#### Step 1: Load Multiple Reference Datasets for Annotation
 
-#converting Seurat object to single cell experiment
+# Load Human Primary Cell Atlas reference
+ref_human_primary <- celldex::HumanPrimaryCellAtlasData()
+
+# Load Blueprint/ENCODE reference for additional coverage of immune cells
+ref_blueprint <- celldex::BlueprintEncodeData()
+
+# Inspect reference datasets
+print(ref_human_primary)
+print(ref_blueprint)
+
+#### Step 2: Convert Seurat Object to SingleCellExperiment
+
+# Convert Seurat object to SingleCellExperiment using DietSeurat to save memory
 sce <- as.SingleCellExperiment(DietSeurat(df))
-sce
 
-results.main <- SingleR(test = sce,assay.type.test = 1,ref = ref,labels = ref$label.main)
-results.fine <- SingleR(test = sce,assay.type.test = 1,ref = ref,labels = ref$label.fine)
+#### Step 3: Run SingleR for Cell Type Annotation Using Multiple References
 
-# summary of general cell type annotations
-table(results.main$pruned.labels)
-table(results.fine$pruned.labels)
+# Run SingleR with Human Primary Cell Atlas reference
+results_primary <- SingleR(test = sce, assay.type.test = 1, ref = ref_human_primary, labels = ref_human_primary$label.main)
 
-#adding annotations to the Seurat object metadata
-df@meta.data$results.main <- results.main$pruned.labels
-df@meta.data$results.fine <- results.fine$pruned.labels
+# Run SingleR with Blueprint/ENCODE reference for comparison
+results_blueprint <- SingleR(test = sce, assay.type.test = 1, ref = ref_blueprint, labels = ref_blueprint$label.main)
 
-#visualizing fine-grained annotations
-df <- SetIdent(df, value = "results.fine")
-DimPlot(df, label = T , repel = T, label.size = 3) + NoLegend()
+#### Step 4: Compare and Consolidate Annotations
 
-#visualizing main annotations
-df <- SetIdent(df, value = "results.main")
-DimPlot(df, label = T , repel = T, label.size = 3) + NoLegend()
+# Create a consensus annotation by comparing the two results
+results_consensus <- ifelse(!is.na(results_primary$pruned.labels), 
+                            results_primary$pruned.labels, 
+                            results_blueprint$pruned.labels)
 
+# Add annotations to the Seurat object metadata
+df@meta.data$celltype_primary <- results_primary$pruned.labels
+df@meta.data$celltype_blueprint <- results_blueprint$pruned.labels
+df@meta.data$celltype_consensus <- results_consensus
+
+#### Step 5: Assess Annotation Confidence
+
+# Plot annotation scores to visualize confidence levels
+plotScoreHeatmap(results_primary, main = "Annotation Scores - Human Primary Cell Atlas")
+```
+![ScoreHeatmap](Visualizations/ScoreHeatmap_Human_primary_cell_atlas.png)
+```r
+plotScoreHeatmap(results_blueprint, main = "Annotation Scores - Blueprint/ENCODE")
+```
+![ScoreHeatmap](Visualizations/ScoreHeatmap_Blueprint.png)
+```r
+#### Step 6: Visualize Annotations and Save Plots
+
+# Set Seurat object identities to consensus cell types and visualize with UMAP
+png("Consensus_Annotations.png", width = 2000, height = 1500, res = 300)
+df <- SetIdent(df, value = "celltype_consensus")
+DimPlot(df, label = TRUE, repel = TRUE, label.size = 3) + NoLegend() + 
+  ggtitle("Consensus Cell Type Annotations")
+dev.off()
+```
+![Plot - Consensus Cell Type Annotations](Visualizations/Consensus_Annotations.png)
+```r
+
+# Visualize and save plot for Human Primary Cell Atlas annotations
+png("HumanPrimaryCellAtlas_Annotations.png", width = 2000, height = 1500, res = 300)
+df <- SetIdent(df, value = "celltype_primary")
+DimPlot(df, label = TRUE, repel = TRUE, label.size = 3) + NoLegend() + 
+  ggtitle("Human Primary Cell Atlas Annotations")
+dev.off()
+```
+![Plot - Human Primary Cell Atlas Annotations](Visualizations/HumanPrimaryCellAtlas_Annotations.png)
+```r
+
+# Visualize and save plot for Blueprint/ENCODE annotations
+png("BlueprintEncode_Annotations.png", width = 2000, height = 1500, res = 300)
+df <- SetIdent(df, value = "celltype_blueprint")
+DimPlot(df, label = TRUE, repel = TRUE, label.size = 3) + NoLegend() + 
+  ggtitle("Blueprint/ENCODE Annotations")
+dev.off()
+```
+![Plot - Blueprint/ENCODE Annotations](Visualizations/BlueprintEncode_Annotations.png)
+```r
+
+#### Step 7: Verify Cell Type Annotations
+
+# Check levels of the consensus annotations
 levels(df)
+
+# Display the number of cells in each annotation
+table(df@meta.data$celltype_consensus)
+
 ```
 
 ## Identifying Different Cell Types within a cluster
