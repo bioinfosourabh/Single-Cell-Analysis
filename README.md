@@ -1,6 +1,15 @@
  # Single-Cell-Analysis
 ## A comprehensive pipeline for single-cell RNA-seq analysis using the Seurat package in R. This repository provides step-by-step scripts and visualizations to guide users through loading, processing, analyzing, and visualizing single-cell RNA-seq data. The pipeline is designed to be modular and flexible, making it easy to customize for different datasets and analysis goals.
 
+🧪 Quality Control: Filtering low-quality cells and genes.
+⚙️ Normalization and Feature Selection: Identifying highly variable genes.
+📉 Dimensional Reduction: PCA, UMAP, and t-SNE for visualization.
+🗺️ Clustering: Grouping cells into distinct clusters.
+🔍 Marker Identification: Finding genes that define each cluster.
+📊 Plotting Marker Genes: Visualizing marker gene expression across clusters.
+🧬 Cell Type Annotation: Assigning cell types using SingleR and reference datasets.
+🔎 Identifying Cell Types Within Clusters: Detecting subpopulations within clusters.
+⚖️ Differential Marker Genes: Identifying differentially expressed genes between groups.
 
 ## Installing Necessary packages
 
@@ -269,7 +278,7 @@ top_markers <- df.markers %>%
   top_n(n = 3, wt = avg_log2FC)
 ```
 
-## 🧬 6. Plotting Marker Genes
+## 📊 6. Plotting Marker Genes
 ```r
 ### Step: Visualize Marker Genes on UMAP
 
@@ -554,3 +563,8 @@ write.csv(myeloid_top10_markers, file = "myeloid_top10_markers.csv", quote = FAL
 VlnPlot(myeloid, features = unique(myeloid_top10_markers$gene[1:5]), ncol = 2, pt.size = 0.1) 
 ```
 ![Violin Plot of Top 5 Markers per Cluster](Visualizations/Myeloid_Top5_Markers_ViolinPlot.png)
+
+📬 Contact
+For any questions, suggestions, or issues, please reach out via:
+
+Email: bioinfosourabh@gmail.com
