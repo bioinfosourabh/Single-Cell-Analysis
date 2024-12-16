@@ -539,3 +539,4 @@ write.csv(myeloid_top10_markers, file = "myeloid_top10_markers.csv", quote = FAL
 #### Save Violin Plot of Top 5 Markers per Cluster
 VlnPlot(myeloid, features = unique(myeloid_top10_markers$gene[1:5]), ncol = 2, pt.size = 0.1) 
 ```
+![Violin Plot of Top 5 Markers per Cluster](Visualizations/Myeloid_Top5_Markers_ViolinPlot.png)
