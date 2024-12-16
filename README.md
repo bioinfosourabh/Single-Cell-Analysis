@@ -1,7 +1,7 @@
  # Single-Cell-Analysis
 ## A comprehensive pipeline for single-cell RNA-seq analysis using the Seurat package in R. This repository provides step-by-step scripts and visualizations to guide users through loading, processing, analyzing, and visualizing single-cell RNA-seq data. The pipeline is designed to be modular and flexible, making it easy to customize for different datasets and analysis goals.
 
-##Purpose of This Repository
+## Purpose of This Repository
 This repository aims to provide a clear and reproducible pipeline for analyzing scRNA-seq data using the Seurat package. The pipeline covers: 
 1. 🧪 Quality Control: Filtering low-quality cells and genes.
 2. ⚙️ Normalization and Feature Selection: Identifying highly variable genes.
