@@ -487,24 +487,55 @@ dev.off()
 
 ## Identifying differential marker genes
 ```r
-#Identifying differential marker gene for myeloid cells
-myeloid <- subset(x = df, idents = c("Monocyte", "Neutrophils", "Macrophage", "Erythroblast", "Platelets"))
-myeloid.markers <- FindMarkers(myeloid, ident.1 = "Monocyte", ident.2 = "Neutrophils", ident.3 = "Macrophage", ident.4 = "Erythroblast", ident.5 = "Platelets")
-myeloid.markers
+#### Step 1: Subset Myeloid Cells
+# Set the active identity class to 'celltype_consensus'
+df <- SetIdent(df, value = "celltype_consensus")
 
+# Check the new levels
+levels(df)
+
+# Subset Seurat object to include only myeloid-related cells
+# Subset using celltype_consensus identities
+myeloid <- subset(df, idents = c("Monocyte", "Neutrophils", "Macrophage", "Erythroblast", "Platelets"))
+
+#### Step 2: Normalize and Identify Variable Features
+# Set default assay to RNA
 DefaultAssay(myeloid) <- "RNA"
-myeloid <- NormalizeData(myeloid)
+
+# Normalize the data using SCTransform for better variance stabilization
+myeloid <- SCTransform(myeloid, verbose = FALSE)
+
+# Identify the top 2000 most variable features
 myeloid <- FindVariableFeatures(myeloid, selection.method = "vst", nfeatures = 2000)
-all.genes <- rownames(myeloid)
-myeloid <- ScaleData(myeloid, features = all.genes)
 
-myeloid.markers <- FindAllMarkers(myeloid, only.pos = T, min.pct = 0.5, logfc.threshold = 0.5)
+#### Step 3: Scale the Data
+# Scale the data using variable features
+myeloid <- ScaleData(myeloid, features = VariableFeatures(myeloid))
 
-#differentially marker gene identification for myeloid cells
-myeloid_top10_markers.de <- as.data.frame(myeloid.markers %>% top_n(n = 10, wt = avg_log2FC))
-myeloid_top10_markers.de
+#### Step 4: Differential Expression Analysis
 
-#saving into file
-write.csv(myeloid_top10_markers.de, file="myeloid_top10_markers.de.csv",quote = FALSE,row.names = F)
+# Perform differential expression analysis for myeloid cells
+# Compare Monocytes, Neutrophils, Macrophages, Erythrocytes, and Platelets
+myeloid.markers <- FindAllMarkers(
+  myeloid, 
+  only.pos = TRUE, 
+  min.pct = 0.5, 
+  logfc.threshold = 0.5,
+  assay = "SCT"  # Use the SCTransform assay
+)
 
+# Display the top 5 markers per cluster for an overview
+top_markers <- myeloid.markers %>% group_by(cluster) %>% top_n(n = 5, wt = avg_log2FC)
+print(top_markers)
+
+#### Step 5: Identify and Save Top 10 Markers per Cluster
+
+# Get the top 10 markers per cluster
+myeloid_top10_markers <- myeloid.markers %>% group_by(cluster) %>% top_n(n = 10, wt = avg_log2FC)
+
+# Save the top 10 markers to a CSV file
+write.csv(myeloid_top10_markers, file = "myeloid_top10_markers.csv", quote = FALSE, row.names = FALSE)
+
+#### Save Violin Plot of Top 5 Markers per Cluster
+VlnPlot(myeloid, features = unique(myeloid_top10_markers$gene[1:5]), ncol = 2, pt.size = 0.1) 
 ```
