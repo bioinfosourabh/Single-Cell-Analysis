@@ -1,15 +1,17 @@
  # Single-Cell-Analysis
 ## A comprehensive pipeline for single-cell RNA-seq analysis using the Seurat package in R. This repository provides step-by-step scripts and visualizations to guide users through loading, processing, analyzing, and visualizing single-cell RNA-seq data. The pipeline is designed to be modular and flexible, making it easy to customize for different datasets and analysis goals.
 
-🧪 Quality Control: Filtering low-quality cells and genes.
-⚙️ Normalization and Feature Selection: Identifying highly variable genes.
-📉 Dimensional Reduction: PCA, UMAP, and t-SNE for visualization.
-🗺️ Clustering: Grouping cells into distinct clusters.
-🔍 Marker Identification: Finding genes that define each cluster.
-📊 Plotting Marker Genes: Visualizing marker gene expression across clusters.
-🧬 Cell Type Annotation: Assigning cell types using SingleR and reference datasets.
-🔎 Identifying Cell Types Within Clusters: Detecting subpopulations within clusters.
-⚖️ Differential Marker Genes: Identifying differentially expressed genes between groups.
+##Purpose of This Repository
+This repository aims to provide a clear and reproducible pipeline for analyzing scRNA-seq data using the Seurat package. The pipeline covers: 
+1. 🧪 Quality Control: Filtering low-quality cells and genes.
+2. ⚙️ Normalization and Feature Selection: Identifying highly variable genes.
+3. 📉 Dimensional Reduction: PCA, UMAP, and t-SNE for visualization.
+4. 🗺️ Clustering: Grouping cells into distinct clusters.
+5. 🔍 Marker Identification: Finding genes that define each cluster.
+6. 📊 Plotting Marker Genes: Visualizing marker gene expression across clusters.
+7. 🧬 Cell Type Annotation: Assigning cell types using SingleR and reference datasets.
+8. 🔎 Identifying Cell Types Within Clusters: Detecting subpopulations within clusters.
+9. ⚖️ Differential Marker Genes: Identifying differentially expressed genes between groups.
 
 ## Installing Necessary packages
 
