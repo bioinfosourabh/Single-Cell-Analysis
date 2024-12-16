@@ -16,6 +16,8 @@ BiocManager::install("SingleR")
 BiocManager::install("SingleCellExperiment")
 BiocManager::install("celldex")
 BiocManager::install(c("GenomicFeatures", "AnnotationDbi"))
+BiocManager::install("scran")
+BiocManager::install(c("SingleCellExperiment", "scater", "BiocGenerics", "SummarizedExperiment"))
 ```
 
 ## Importing Libraries
@@ -26,7 +28,14 @@ library(patchwork)
 library(SingleR)
 library(magrittr)
 library(RColorBrewer)
-library(ggplot2)
+library(ggplot2)         # For plot customization
+library(DESeq2)          # For alternative differential expression analysis
+library(scran)           # For more robust normalization and marker detection
+library(celldex)
+library(SingleCellExperiment)
+library(scater)          # For visualization and quality control  
+library(patchwork)
+library(ggrepel)
 ```
 
 ## Quality control
