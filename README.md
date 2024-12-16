@@ -411,41 +411,79 @@ table(df@meta.data$celltype_consensus)
 ## Identifying Different Cell Types within a cluster
 ```r
 #identifying the different cell types of T/NK cells
-#subseting based on the clustering
-subset(x = df, idents = c("T_cells", "NK_cell"), invert = TRUE)
 
-#finding markers for T/NK cells cluster
-T_df <- subset(x = df, idents = c("T_cells", "NK_cell"))
-T_df.markers <- FindAllMarkers(T_df, only.pos = T, min.pct = 0.5, logfc.threshold = 0.5)
+#### Step 1: Subset T and NK Cells
 
+# Subset Seurat object to include only CD4+ T-cells, CD8+ T-cells, and NK cells
+T_df <- subset(df, idents = c("CD4+ T-cells", "CD8+ T-cells", "NK cells"))
 
-#Visualising T/NK cells cluster on UMAP
-DimPlot(T_df, label = T)
+#### Step 2: Identify Markers for T/NK Cell Subclusters
+# Find markers for T/NK cell subclusters with stringent criteria
+T_df.markers <- FindAllMarkers(T_df, only.pos = TRUE, min.pct = 0.5, logfc.threshold = 0.5)
 
+# Display the top 5 markers per cluster for an overview
+top_markers <- T_df.markers %>% group_by(cluster) %>% top_n(n = 5, wt = avg_log2FC)
+print(top_markers)
 
-#3 top genes with highest average expression within T/NK cells.
-y <- T_df.markers %>% top_n(n=3, wt= avg_log2FC)
-y
+#### Step 3: Visualize T/NK Cell Clusters on UMAP
 
-#UMAP for top 3 genes with highest average expression within T/NK cells
-FeaturePlot(T_df, features = y$gene[1:3])
+# Visualize T/NK cells with cluster labels
+DimPlot(T_df, label = TRUE, repel = TRUE, label.size = 3) + 
+  ggtitle("T/NK Cell Clusters") + 
+  NoLegend()
+```
+![T/NK Cell Clusters on UMAP](Visualizations/T_NK_Cell_Clusters.png)
+```r
 
-#Fine-grain Annotation of the cluster to identify different types of cells
+#### Step 4: Plot Top 3 Genes with Highest Expression
+
+# Identify the top 3 genes with the highest average expression
+top3_genes <- T_df.markers %>% top_n(n = 3, wt = avg_log2FC)
+print(top3_genes)
+
+# UMAP visualization for the top 3 marker genes
+png("T_NK_Top3_Markers.png", width = 2500, height = 1500, res = 300)
+FeaturePlot(T_df, features = top3_genes$gene, ncol = 3)
+dev.off()
+```
+![T/NK Cell Clusters on UMAP](Visualizations/T_NK_Top3_Markers.png)
+```r
+#### Step 5: Fine-Grained Annotation of T/NK Cells Using SingleR
+
+# Convert Seurat object to SingleCellExperiment for SingleR annotation
 sce_T <- as.SingleCellExperiment(DietSeurat(T_df))
-results_T.fine <- SingleR(test = sce_T,assay.type.test = 1,ref = ref,labels = ref$label.fine)
 
-#table for Different types of cells in T/NK cells cluster
-table(results_T.fine$pruned.labels)
-T_NK_cells <- table(results_T.fine$pruned.labels)
-write.csv(T_NK_cells, file="T_NK_cells.csv",quote = FALSE,row.names = F)
+# Load relevant reference dataset for fine-grained annotation
+ref <- celldex::HumanPrimaryCellAtlasData()  # Replace with other references if needed
 
+# Run SingleR for fine-grained annotation
+results_T.fine <- SingleR(test = sce_T, assay.type.test = 1, ref = ref, labels = ref$label.fine)
+
+# Add annotations to the Seurat object metadata
 T_df@meta.data$results_T.fine <- results_T.fine$pruned.labels
+
+#### Step 6: Explore and Save Fine-Grained Annotations
+
+# Display the distribution of different cell types in T/NK cells
+T_NK_cell_types <- table(results_T.fine$pruned.labels)
+print(T_NK_cell_types)
+
+# Save the cell type counts as a CSV file
+write.csv(T_NK_cell_types, file = "T_NK_cells.csv", quote = FALSE, row.names = TRUE)
+
+#### Step 7: Visualize Fine-Grained Annotations on UMAP
+
+# Set the identities to the fine-grained annotations
 T_df <- SetIdent(T_df, value = "results_T.fine")
 
-#Visualizing the T/NK cells 
-DimPlot(T_df, label = T , repel = T, label.size = 3) + NoLegend()
+# UMAP plot with fine-grained cell type labels
+png("T_NK_FineGrained_Annotations.png", width = 2000, height = 1500, res = 300)
+DimPlot(T_df, label = TRUE, repel = TRUE, label.size = 3) + 
+  ggtitle("Fine-Grained Annotation of T/NK Cells") + 
+  NoLegend()
+dev.off()
 ```
-
+![Fine-Grained Annotations on UMAP](Visualizations/T_NK_FineGrained_Annotations.png)
 
 ## Identifying differential marker genes
 ```r
