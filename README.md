@@ -1,23 +1,28 @@
  # Single-Cell-Analysis
-## A comprehensive GitHub repository dedicated to single cell data analysis using the R Seurat package
+## A comprehensive pipeline for single-cell RNA-seq analysis using the Seurat package in R. This repository provides step-by-step scripts and visualizations to guide users through loading, processing, analyzing, and visualizing single-cell RNA-seq data. The pipeline is designed to be modular and flexible, making it easy to customize for different datasets and analysis goals.
 
 
 ## Installing Necessary packages
 
 ```r
 if (!require("BiocManager", quietly = TRUE))
-install.packages("BiocManager")
+  install.packages("BiocManager")
+
+# Install CRAN packages
 install.packages('Seurat')
-install.packages("RColorBrewer")
+install.packages('RColorBrewer')
 install.packages('fastmap')
-install.packages('celldex')
-browseVignettes("celldex")
+install.packages('ggplot2')
+install.packages('patchwork')
+install.packages('magrittr')
+
+# Install Bioconductor packages
 BiocManager::install("SingleR")
-BiocManager::install("SingleCellExperiment")
 BiocManager::install("celldex")
-BiocManager::install(c("GenomicFeatures", "AnnotationDbi"))
+BiocManager::install("SingleCellExperiment")
 BiocManager::install("scran")
-BiocManager::install(c("SingleCellExperiment", "scater", "BiocGenerics", "SummarizedExperiment"))
+BiocManager::install("scater")
+BiocManager::install(c("GenomicFeatures", "AnnotationDbi"))
 ```
 
 ## Importing Libraries
@@ -38,7 +43,7 @@ library(patchwork)
 library(ggrepel)
 ```
 
-## Quality control
+## 🧪 1. Quality Control (QC)
 ```r
 ### Step 1: Load the Dataset
 # Define the path to the dataset
@@ -103,7 +108,7 @@ VlnPlot(df, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.rb
 ![ QC Metrics After Filtering](Visualizations/After_filtering.png)
 
 
-## Identifying Highly Variable Genes
+## ⚙️ 2. Normalization and Identification of Highly Variable Genes
 ```r
 ### Step 1: Normalize the Data
 
@@ -135,7 +140,7 @@ plot2
 ```
 ![Highly Variable Genes](Visualizations/Highly_Variable_Features.png)
 
-## Dimension Reduction : Principal Component Analysis (PCA) and Visualization
+## 📉 3. Dimension Reduction : Principal Component Analysis (PCA) and Visualization
 ```r
 ### Step: Principal Component Analysis (PCA) and Visualization
 
@@ -189,7 +194,7 @@ ElbowPlot(df) +
 ![Dimensional heatmap](Visualizations/ElbowPlot_PCA.png)
 
 
-## Clustering the cells
+## 🗺️ 4. Clustering the Cells
 ```r
 ### Step: Clustering and Dimensional Reduction
 
@@ -231,7 +236,7 @@ DimPlot(df, reduction = "tsne", label = TRUE, repel = TRUE) +
 ```
 ![t-SNE plot with cluster labels](Visualizations/t-SNE_Clusters.png)
 
-## Finding markers of clusters
+## 🔍 5. Finding Cluster-Specific Marker Genes
 ```r
 ### Step: Identify Cluster-Specific Markers
 
@@ -264,7 +269,7 @@ top_markers <- df.markers %>%
   top_n(n = 3, wt = avg_log2FC)
 ```
 
-## Plotting marker genes
+## 🧬 6. Plotting Marker Genes
 ```r
 ### Step: Visualize Marker Genes on UMAP
 
@@ -325,7 +330,7 @@ FeaturePlot(df, features = filtered_x$gene[1:3])
 
 
 
-## Cell type annotation using SingleR
+## 🧬 7. Cell Type Annotation
 ```r
 #### Step 1: Load Multiple Reference Datasets for Annotation
 
@@ -417,7 +422,7 @@ table(df@meta.data$celltype_consensus)
 
 ```
 
-## Identifying Different Cell Types within a cluster
+## 🔎 8. Identifying Different Cell Types Within a Cluster
 ```r
 #identifying the different cell types of T/NK cells
 
@@ -494,7 +499,7 @@ dev.off()
 ```
 ![Fine-Grained Annotations on UMAP](Visualizations/T_NK_FineGrained_Annotations.png)
 
-## Identifying differential marker genes
+## ⚖️ 9. Identifying differential marker genes
 ```r
 #### Step 1: Subset Myeloid Cells
 # Set the active identity class to 'celltype_consensus'
