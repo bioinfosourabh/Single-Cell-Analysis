@@ -87,6 +87,7 @@ VlnPlot(df, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.rb
 
 
 ## ⚙️ 2. Normalization and Identification of Highly Variable Genes
+Code:
 ```r
 ### Step 1: Normalize the Data
 
@@ -119,6 +120,7 @@ plot2
 ![Highly Variable Genes](Visualizations/Highly_Variable_Features.png)
 
 ## 📉 3. Dimension Reduction : Principal Component Analysis (PCA) and Visualization
+Code:
 ```r
 ### Step: Principal Component Analysis (PCA) and Visualization
 
@@ -173,6 +175,7 @@ ElbowPlot(df) +
 
 
 ## 🗺️ 4. Clustering the Cells
+Code:
 ```r
 ### Step: Clustering and Dimensional Reduction
 
@@ -215,6 +218,7 @@ DimPlot(df, reduction = "tsne", label = TRUE, repel = TRUE) +
 ![t-SNE plot with cluster labels](Visualizations/t-SNE_Clusters.png)
 
 ## 🔍 5. Finding Cluster-Specific Marker Genes
+Code:
 ```r
 ### Step: Identify Cluster-Specific Markers
 
@@ -248,6 +252,7 @@ top_markers <- df.markers %>%
 ```
 
 ## 📊 6. Plotting Marker Genes
+Code:
 ```r
 ### Step: Visualize Marker Genes on UMAP
 
@@ -309,6 +314,7 @@ FeaturePlot(df, features = filtered_x$gene[1:3])
 
 
 ## 🧬 7. Cell Type Annotation
+Code:
 ```r
 #### Step 1: Load Multiple Reference Datasets for Annotation
 
@@ -401,6 +407,7 @@ table(df@meta.data$celltype_consensus)
 ```
 
 ## 🔎 8. Identifying Different Cell Types Within a Cluster
+Code:
 ```r
 #identifying the different cell types of T/NK cells
 
@@ -478,6 +485,7 @@ dev.off()
 ![Fine-Grained Annotations on UMAP](Visualizations/T_NK_FineGrained_Annotations.png)
 
 ## ⚖️ 9. Identifying differential marker genes
+Code:
 ```r
 #### Step 1: Subset Myeloid Cells
 # Set the active identity class to 'celltype_consensus'
