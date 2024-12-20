@@ -13,45 +13,11 @@ This repository aims to provide a clear and reproducible pipeline for analyzing 
 8. 🔎 Identifying Cell Types Within Clusters: Detecting subpopulations within clusters.
 9. ⚖️ Differential Marker Genes: Identifying differentially expressed genes between groups.
 
-## Installing Necessary packages
 
+## 🚀 Installing Necessary Packages
+To install all the required R packages for running this pipeline, simply execute the installation script provided in the Code/ folder.
 ```r
-if (!require("BiocManager", quietly = TRUE))
-  install.packages("BiocManager")
-
-# Install CRAN packages
-install.packages('Seurat')
-install.packages('RColorBrewer')
-install.packages('fastmap')
-install.packages('ggplot2')
-install.packages('patchwork')
-install.packages('magrittr')
-
-# Install Bioconductor packages
-BiocManager::install("SingleR")
-BiocManager::install("celldex")
-BiocManager::install("SingleCellExperiment")
-BiocManager::install("scran")
-BiocManager::install("scater")
-BiocManager::install(c("GenomicFeatures", "AnnotationDbi"))
-```
-
-## Importing Libraries
-```r
-library(Seurat)
-library(dplyr)
-library(patchwork)
-library(SingleR)
-library(magrittr)
-library(RColorBrewer)
-library(ggplot2)         # For plot customization
-library(DESeq2)          # For alternative differential expression analysis
-library(scran)           # For more robust normalization and marker detection
-library(celldex)
-library(SingleCellExperiment)
-library(scater)          # For visualization and quality control  
-library(patchwork)
-library(ggrepel)
+source("Code/Install.R")
 ```
 
 ## 🧪 1. Quality Control (QC)
