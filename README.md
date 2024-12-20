@@ -24,7 +24,7 @@ source("Code/Install.R")
 ```r
 ### Step 1: Load the Dataset
 # Define the path to the dataset
-data_path <- "path/to/data"
+data_path <- "/path/to/data"
 
 # Load the raw count matrix using Read10X
 data <- Read10X(data.dir = data_path)
