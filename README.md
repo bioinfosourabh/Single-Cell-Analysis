@@ -1,5 +1,5 @@
  # Single-Cell-Analysis: A Step-by-Step Workflow
-## A comprehensive pipeline for single-cell RNA-seq analysis using the Seurat package in R. This repository provides step-by-step scripts and visualizations to guide users through loading, processing, analyzing, and visualizing single-cell RNA-seq data. The pipeline is designed to be modular and flexible, making it easy to customize for different datasets and analysis goals.
+A comprehensive pipeline for single-cell RNA-seq analysis using the Seurat package in R. This repository provides step-by-step scripts and visualizations to guide users through loading, processing, analyzing, and visualizing single-cell RNA-seq data. The pipeline is designed to be modular and flexible, making it easy to customize for different datasets and analysis goals.
 
 ## Purpose of This Repository
 This repository aims to provide a clear and reproducible pipeline for analyzing scRNA-seq data using the Seurat package. The pipeline covers: 
@@ -12,7 +12,6 @@ This repository aims to provide a clear and reproducible pipeline for analyzing 
 7. 🧬 Cell Type Annotation: Assigning cell types using SingleR and reference datasets.
 8. 🔎 Identifying Cell Types Within Clusters: Detecting subpopulations within clusters.
 9. ⚖️ Differential Marker Genes: Identifying differentially expressed genes between groups.
-
 
 
 
