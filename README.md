@@ -1,4 +1,4 @@
- # Single-Cell-Analysis
+ # Single-Cell-Analysis: A Step-by-Step Workflow
 ## A comprehensive pipeline for single-cell RNA-seq analysis using the Seurat package in R. This repository provides step-by-step scripts and visualizations to guide users through loading, processing, analyzing, and visualizing single-cell RNA-seq data. The pipeline is designed to be modular and flexible, making it easy to customize for different datasets and analysis goals.
 
 ## Purpose of This Repository
