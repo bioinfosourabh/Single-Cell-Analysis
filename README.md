@@ -24,6 +24,7 @@ source("Code/Install.R")
 ## 🧪 1. Quality Control (QC)
 Purpose:
 Assess and filter out low-quality cells and genes based on various quality metrics such as mitochondrial gene content, ribosomal gene content, and total gene counts. This step ensures that only high-quality cells are used for downstream analysis, improving the accuracy of the results.
+
 Code:
 ```r
 ### Step 1: Load the Dataset
