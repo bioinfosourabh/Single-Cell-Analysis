@@ -3,25 +3,25 @@ A comprehensive pipeline for single-cell RNA-seq analysis using the Seurat packa
 
 ## Purpose of This Repository
 This repository aims to provide a clear and reproducible pipeline for analyzing scRNA-seq data using the Seurat package. The pipeline covers: 
-1. 🧪 Quality Control: Filtering low-quality cells and genes.
-2. ⚙️ Normalization and Feature Selection: Identifying highly variable genes.
-3. 📉 Dimensional Reduction: PCA, UMAP, and t-SNE for visualization.
-4. 🗺️ Clustering: Grouping cells into distinct clusters.
-5. 🔍 Marker Identification: Finding genes that define each cluster.
-6. 📊 Plotting Marker Genes: Visualizing marker gene expression across clusters.
-7. 🧬 Cell Type Annotation: Assigning cell types using SingleR and reference datasets.
-8. 🔎 Identifying Cell Types Within Clusters: Detecting subpopulations within clusters.
-9. ⚖️ Differential Marker Genes: Identifying differentially expressed genes between groups.
+1. Quality Control: Filtering low-quality cells and genes.
+2. Normalization and Feature Selection: Identifying highly variable genes.
+3. Dimensional Reduction: PCA, UMAP, and t-SNE for visualization.
+4. Clustering: Grouping cells into distinct clusters.
+5. Marker Identification: Finding genes that define each cluster.
+6. Plotting Marker Genes: Visualizing marker gene expression across clusters.
+7. Cell Type Annotation: Assigning cell types using SingleR and reference datasets.
+8. Identifying Cell Types Within Clusters: Detecting subpopulations within clusters.
+9. Differential Marker Genes: Identifying differentially expressed genes between groups.
 
 
 
-## 🚀 Installation & Setup
+## Installation & Setup
 To install all the required R packages for running this pipeline, simply execute the installation script provided in the Code/ folder.
 ```r
 source("Code/Install.R")
 ```
 
-## 🧪 1. Quality Control (QC)
+## 1. Quality Control (QC)
 Purpose:
 Assess and filter out low-quality cells and genes based on various quality metrics such as mitochondrial gene content, ribosomal gene content, and total gene counts. This step ensures that only high-quality cells are used for downstream analysis, improving the accuracy of the results.
 
@@ -90,7 +90,7 @@ VlnPlot(df, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.rb
 ![ QC Metrics After Filtering](Visualizations/After_filtering.png)
 
 
-## ⚙️ 2. Normalization and Identification of Highly Variable Genes
+## 2. Normalization and Identification of Highly Variable Genes
 Code:
 ```r
 ### Step 1: Normalize the Data
@@ -123,7 +123,7 @@ plot2
 ```
 ![Highly Variable Genes](Visualizations/Highly_Variable_Features.png)
 
-## 📉 3. Dimension Reduction : Principal Component Analysis (PCA) and Visualization
+## 3. Dimension Reduction : Principal Component Analysis (PCA) and Visualization
 Code:
 ```r
 ### Step: Principal Component Analysis (PCA) and Visualization
@@ -178,7 +178,7 @@ ElbowPlot(df) +
 ![Dimensional heatmap](Visualizations/ElbowPlot_PCA.png)
 
 
-## 🗺️ 4. Clustering the Cells
+## 4. Clustering the Cells
 Code:
 ```r
 ### Step: Clustering and Dimensional Reduction
@@ -221,7 +221,7 @@ DimPlot(df, reduction = "tsne", label = TRUE, repel = TRUE) +
 ```
 ![t-SNE plot with cluster labels](Visualizations/t-SNE_Clusters.png)
 
-## 🔍 5. Finding Cluster-Specific Marker Genes
+## 5. Finding Cluster-Specific Marker Genes
 Code:
 ```r
 ### Step: Identify Cluster-Specific Markers
@@ -255,7 +255,7 @@ top_markers <- df.markers %>%
   top_n(n = 3, wt = avg_log2FC)
 ```
 
-## 📊 6. Plotting Marker Genes
+## 6. Plotting Marker Genes
 Code:
 ```r
 ### Step: Visualize Marker Genes on UMAP
@@ -317,7 +317,7 @@ FeaturePlot(df, features = filtered_x$gene[1:3])
 
 
 
-## 🧬 7. Cell Type Annotation
+## 7. Cell Type Annotation
 Code:
 ```r
 #### Step 1: Load Multiple Reference Datasets for Annotation
@@ -410,7 +410,7 @@ table(df@meta.data$celltype_consensus)
 
 ```
 
-## 🔎 8. Identifying Different Cell Types Within a Cluster
+## 8. Identifying Different Cell Types Within a Cluster
 Code:
 ```r
 #identifying the different cell types of T/NK cells
@@ -488,7 +488,7 @@ dev.off()
 ```
 ![Fine-Grained Annotations on UMAP](Visualizations/T_NK_FineGrained_Annotations.png)
 
-## ⚖️ 9. Identifying differential marker genes
+## 9. Identifying differential marker genes
 Code:
 ```r
 #### Step 1: Subset Myeloid Cells
