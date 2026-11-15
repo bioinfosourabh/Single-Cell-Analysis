@@ -1,5 +1,5 @@
- # Single-Cell-Analysis: A Step-by-Step Workflow
-A comprehensive pipeline for single-cell RNA-seq analysis using the Seurat package in R. This repository provides step-by-step scripts and visualizations to guide users through loading, processing, analyzing, and visualizing single-cell RNA-seq data. The pipeline is designed to be modular and flexible, making it easy to customize for different datasets and analysis goals.
+# Single-Cell RNA-seq Analysis with Seurat: A Step-by-Step Workflow
+A pipeline for single-cell RNA-seq analysis using the Seurat package in R. This README documents each step with R code and the resulting figures, covering loading, processing, analyzing, and visualizing single-cell RNA-seq data. The pipeline is designed to be modular and flexible, making it easy to customize for different datasets and analysis goals.
 
 ## Purpose of This Repository
 This repository aims to provide a clear and reproducible pipeline for analyzing scRNA-seq data using the Seurat package. The pipeline covers: 
@@ -20,6 +20,9 @@ To install all the required R packages for running this pipeline, simply execute
 ```r
 source("Code/Install.R")
 ```
+`Install.R` installs the CRAN and Bioconductor packages and then loads the libraries used below. It also loads `dplyr`, `ggrepel` and `DESeq2`, which it does not install; install them first if they are missing (`install.packages(c("dplyr", "ggrepel"))`, `BiocManager::install("DESeq2")`).
+
+The workflow expects a 10x Genomics-style count matrix directory (`barcodes.tsv`, `genes.tsv`, `matrix.mtx`), read with `Read10X()`. All figures shown below are in [`Visualizations/`](Visualizations).
 
 ## 1. Quality Control (QC)
 Purpose:
@@ -545,7 +548,8 @@ VlnPlot(myeloid, features = unique(myeloid_top10_markers$gene[1:5]), ncol = 2, p
 ```
 ![Violin Plot of Top 5 Markers per Cluster](Visualizations/Myeloid_Top5_Markers_ViolinPlot.png)
 
-📬 Contact
-For any questions, suggestions, or issues, please reach out via:
+## Author
 
-Email: bioinfosourabh@gmail.com
+Sourabh Kumar · [bioinfosourabh@gmail.com](mailto:bioinfosourabh@gmail.com) · [bioinfosourabh.netlify.app](https://bioinfosourabh.netlify.app) · ORCID [0009-0009-5840-9830](https://orcid.org/0009-0009-5840-9830)
+
+For questions, suggestions or issues, please open an issue or email me.
