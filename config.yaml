@@ -1,0 +1,78 @@
+# Default configuration: 10x Genomics PBMC 3k (2,700 peripheral blood
+# mononuclear cells, Chromium v1, hg19), the dataset used in the Seurat
+# guided clustering tutorial. Download it with scripts/00_download_data.R.
+#   Rscript run_pipeline.R --config config.yaml
+
+project: "pbmc3k"
+seed: 42
+
+paths:
+  # Directory with barcodes.tsv, genes.tsv (or features.tsv) and matrix.mtx
+  # (optionally .gz), as read by Seurat::Read10X().
+  data_dir: "data/pbmc3k/filtered_gene_bc_matrices/hg19"
+  results: "results"
+
+download:
+  url: "https://cf.10xgenomics.com/samples/cell/pbmc3k/pbmc3k_filtered_gene_bc_matrices.tar.gz"
+  dest_dir: "data/pbmc3k"
+  md5: null   # optional checksum of the archive
+
+# ---- 01. QC -------------------------------------------------------------------
+qc:
+  min_cells: 3            # keep genes detected in >= min_cells cells
+  min_features: 200       # keep cells with >= min_features genes
+  max_features: 2500
+  max_counts: null        # null = no upper limit on UMI counts
+  max_percent_mt: 5
+  max_percent_rb: null    # null = no ribosomal filter
+  mt_pattern: "^MT-"
+  rb_pattern: "^RP[SL]"
+
+# ---- 02. Normalisation, HVGs, PCA ---------------------------------------------
+normalization:
+  method: "LogNormalize"  # "LogNormalize" or "SCT"
+  scale_factor: 10000
+  n_variable_features: 2000
+
+# ---- 03. Clustering and embeddings --------------------------------------------
+clustering:
+  dims: 10                # number of PCs used for the graph, UMAP and t-SNE
+  resolution: 0.5
+  run_tsne: true
+
+# ---- 04. Markers ----------------------------------------------------------------
+markers:
+  min_pct: 0.25
+  logfc_threshold: 0.25
+  padj_cutoff: 0.05
+  # Canonical markers shown as feature plots (genes absent from the data are skipped).
+  known:
+    IL7R: "CD4 T cells"
+    CCR7: "Naive T cells"
+    CD8A: "CD8 T cells"
+    MS4A1: "B cells"
+    CD14: "CD14+ monocytes"
+    FCGR3A: "FCGR3A+ monocytes"
+    GNLY: "NK cells"
+    FCER1A: "Dendritic cells"
+    PPBP: "Platelets"
+
+# ---- 05. SingleR annotation ------------------------------------------------------
+annotation:
+  # celldex references: any of HumanPrimaryCellAtlas, BlueprintEncode,
+  # MonacoImmune, DatabaseImmuneCellExpression, NovershternHematopoietic.
+  references: ["HumanPrimaryCellAtlas", "BlueprintEncode"]
+  label_column: "label.main"
+  # Optional: path to a SummarizedExperiment (.rds) with a 'logcounts' assay
+  # and label.main / label.fine columns, used in addition to (or instead of)
+  # the celldex references.
+  custom_reference_rds: null
+
+# ---- 06. Sub-population analyses -------------------------------------------------
+subclusters:
+  min_cells: 20
+  # Regular expressions applied to the consensus labels from step 05.
+  t_nk_pattern: "T[ _-]?cell|NK"
+  myeloid_pattern: "Monocyte|Macrophage|DC|Dendritic|Neutrophil"
+  # Reference used for fine-grained T/NK annotation (label.fine).
+  fine_reference: "HumanPrimaryCellAtlas"

@@ -1,0 +1,62 @@
+# Configuration used for the figures in Visualizations/: a 10x Genomics count
+# matrix of 14 breast tumour samples (33,694 genes x 44,024 cells; barcode
+# prefixes sc5rJUQ0xx, consistent with the breast cancer data of Qian et al.
+# 2020, Cell Research 30:745-762). These data are not downloaded by
+# scripts/00_download_data.R. Obtain the breast cancer matrix from the authors'
+# data portal (https://lambrechtslab.sites.vib.be/en/pan-cancer-blueprint-tumour-microenvironment-0)
+# and place it in data/breast_tumour/ in 10x format (barcodes.tsv, genes.tsv,
+# matrix.mtx). The QC thresholds below are the ones used for those figures.
+#   Rscript run_pipeline.R --config config_breast_tumour.yaml
+
+project: "breast_tumour"
+seed: 42
+
+paths:
+  data_dir: "data/breast_tumour"
+  results: "results_breast_tumour"
+
+download:
+  url: null
+
+qc:
+  min_cells: 3
+  min_features: 200
+  max_features: 5000
+  max_counts: 75000
+  max_percent_mt: 15
+  max_percent_rb: 50
+  mt_pattern: "^MT-"
+  rb_pattern: "^RP[SL]"
+
+normalization:
+  method: "LogNormalize"
+  scale_factor: 10000
+  n_variable_features: 3000
+
+clustering:
+  dims: 10
+  resolution: 0.5
+  run_tsne: true
+
+markers:
+  min_pct: 0.25
+  logfc_threshold: 0.5
+  padj_cutoff: 0.05
+  known:
+    COL6A2: "Fibroblasts"
+    IL7R: "CD4 T cells"
+    KRT14: "Epithelial cells"
+    PECAM1: "Endothelial cells"
+    CD68: "Macrophages"
+    MS4A1: "B cells"
+
+annotation:
+  references: ["HumanPrimaryCellAtlas", "BlueprintEncode"]
+  label_column: "label.main"
+  custom_reference_rds: null
+
+subclusters:
+  min_cells: 20
+  t_nk_pattern: "T[ _-]?cell|NK"
+  myeloid_pattern: "Monocyte|Macrophage|DC|Dendritic|Neutrophil"
+  fine_reference: "HumanPrimaryCellAtlas"

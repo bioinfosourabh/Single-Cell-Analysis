@@ -1,555 +1,283 @@
-# Single-Cell RNA-seq Analysis with Seurat: A Step-by-Step Workflow
-A pipeline for single-cell RNA-seq analysis using the Seurat package in R. This README documents each step with R code and the resulting figures, covering loading, processing, analyzing, and visualizing single-cell RNA-seq data. The pipeline is designed to be modular and flexible, making it easy to customize for different datasets and analysis goals.
+# Single-cell RNA-seq analysis with Seurat and SingleR
 
-## Purpose of This Repository
-This repository aims to provide a clear and reproducible pipeline for analyzing scRNA-seq data using the Seurat package. The pipeline covers: 
-1. Quality Control: Filtering low-quality cells and genes.
-2. Normalization and Feature Selection: Identifying highly variable genes.
-3. Dimensional Reduction: PCA, UMAP, and t-SNE for visualization.
-4. Clustering: Grouping cells into distinct clusters.
-5. Marker Identification: Finding genes that define each cluster.
-6. Plotting Marker Genes: Visualizing marker gene expression across clusters.
-7. Cell Type Annotation: Assigning cell types using SingleR and reference datasets.
-8. Identifying Cell Types Within Clusters: Detecting subpopulations within clusters.
-9. Differential Marker Genes: Identifying differentially expressed genes between groups.
+[![pbmc3k-pipeline](https://github.com/bioinfosourabh/single-cell-analysis/actions/workflows/pbmc3k-pipeline.yml/badge.svg)](https://github.com/bioinfosourabh/single-cell-analysis/actions/workflows/pbmc3k-pipeline.yml)
 
+An R workflow for droplet-based (10x Genomics) single-cell RNA-seq data with Seurat (v5) and SingleR. It covers:
 
+1. Quality control: filtering cells on detected genes, UMI counts, and mitochondrial and ribosomal read fractions.
+2. Normalisation and selection of highly variable genes (LogNormalize, or SCTransform v2).
+3. Dimensional reduction: PCA, UMAP and t-SNE.
+4. Graph-based clustering.
+5. Cluster marker genes.
+6. Marker gene plots.
+7. Reference-based cell type annotation with SingleR (Human Primary Cell Atlas and Blueprint/ENCODE).
+8. Sub-population analysis of T and NK cells, including fine-grained annotation.
+9. Marker genes between myeloid cell types.
 
-## Installation & Setup
-To install all the required R packages for running this pipeline, simply execute the installation script provided in the Code/ folder.
-```r
-source("Code/Install.R")
+## Repository structure
+
 ```
-`Install.R` installs the CRAN and Bioconductor packages and then loads the libraries used below. It also loads `dplyr`, `ggrepel` and `DESeq2`, which it does not install; install them first if they are missing (`install.packages(c("dplyr", "ggrepel"))`, `BiocManager::install("DESeq2")`).
+single-cell-analysis/
+├── config.yaml                  # default: 10x Genomics PBMC 3k
+├── config_breast_tumour.yaml    # settings used for the figures in Visualizations/
+├── run_pipeline.R               # runs the numbered scripts in order
+├── install_packages.R           # installs CRAN and Bioconductor dependencies
+├── scripts/
+│   ├── utils.R                  # shared helpers (config, logging, figure output)
+│   ├── 00_download_data.R       # downloads PBMC 3k
+│   ├── 01_qc.R                  # section 1
+│   ├── 02_normalize_pca.R       # sections 2-3
+│   ├── 03_cluster_umap.R        # section 4
+│   ├── 04_markers.R             # sections 5-6
+│   ├── 05_annotation_singler.R  # section 7
+│   └── 06_subcluster_analysis.R # sections 8-9
+├── Visualizations/              # figures shown below (breast tumour data)
+└── .github/workflows/           # GitHub Actions: runs the workflow on PBMC 3k
+```
 
-The workflow expects a 10x Genomics-style count matrix directory (`barcodes.tsv`, `genes.tsv`, `matrix.mtx`), read with `Read10X()`. All figures shown below are in [`Visualizations/`](Visualizations).
+Every script reads its parameters (paths, QC thresholds, number of PCs, clustering resolution, references) from a YAML configuration: `config.yaml` by default, or the file given with `--config`. Each script sets the random seed and writes `sessionInfo()` to `results/logs/`.
 
-## 1. Quality Control (QC)
-Purpose:
-Assess and filter out low-quality cells and genes based on various quality metrics such as mitochondrial gene content, ribosomal gene content, and total gene counts. This step ensures that only high-quality cells are used for downstream analysis, improving the accuracy of the results.
+## Data
 
-Code:
+**Default dataset: PBMC 3k.** `scripts/00_download_data.R` downloads the 10x Genomics *3k PBMCs from a Healthy Donor* filtered gene-barcode matrices (2,700 cells, Chromium v1, hg19), the dataset used in the Seurat guided clustering tutorial, from [cf.10xgenomics.com](https://cf.10xgenomics.com/samples/cell/pbmc3k/pbmc3k_filtered_gene_bc_matrices.tar.gz). It unpacks them to `data/pbmc3k/filtered_gene_bc_matrices/hg19/`. The QC thresholds in `config.yaml` (200-2,500 genes per cell, < 5% mitochondrial reads) are the ones used for this dataset in the Seurat tutorial.
+
+**Breast tumour data (figures in `Visualizations/`).** The figures shown below were produced from a 10x Genomics count matrix of 14 breast tumour samples (33,694 genes x 44,024 cells). Its barcode prefixes (`sc5rJUQ0xx`) are consistent with the breast cancer data of Qian et al. (2020). These data are not redistributed here: an earlier copy in this repository was a truncated `matrix.mtx` and has been removed. To repeat that analysis, obtain the breast cancer count matrix from the authors' [data portal](https://lambrechtslab.sites.vib.be/en/pan-cancer-blueprint-tumour-microenvironment-0), place `barcodes.tsv`, `genes.tsv` and `matrix.mtx` in `data/breast_tumour/`, and run with `config_breast_tumour.yaml`. That configuration has the QC thresholds used for those figures.
+
+Any 10x directory readable by `Seurat::Read10X()` can be analysed by setting `paths$data_dir` in a copy of `config.yaml`.
+
+## Installation
+
+R (>= 4.3) is required. From the repository root:
+
+```sh
+Rscript install_packages.R
+```
+
+This installs the missing packages: Seurat, SeuratObject, Matrix, dplyr, ggplot2, patchwork, RColorBrewer and yaml from CRAN; SingleR, celldex, SingleCellExperiment, SummarizedExperiment and glmGamPoi from Bioconductor; and, optionally, presto from GitHub for faster marker tests. The celldex reference datasets are downloaded and cached on first use.
+
+## Usage
+
+```sh
+Rscript run_pipeline.R                                     # PBMC 3k: download + steps 01-06
+Rscript run_pipeline.R --config config_breast_tumour.yaml  # breast tumour data (see Data)
+Rscript run_pipeline.R --from 04 --to 06                   # re-run part of the workflow
+```
+
+Outputs go to `results/` (or `paths$results`): `figures/` (PNG), `tables/` (CSV), `rds/` (Seurat objects after each step) and `logs/`. The PBMC 3k run takes about 10-15 minutes on a laptop.
+
+## 1. Quality control (`01_qc.R`)
+
+**Purpose.** Remove low-quality cells before downstream analysis. These include empty or damaged droplets with few detected genes, likely doublets with unusually many genes or UMIs, and cells with a high mitochondrial read fraction, which indicates cytoplasmic RNA loss. Genes detected in fewer than three cells are removed.
+
 ```r
-### Step 1: Load the Dataset
-# Define the path to the dataset
-data_path <- "/path/to/data"
-
-# Load the raw count matrix using Read10X
-data <- Read10X(data.dir = data_path)
-
-# Replace underscores with dashes in feature names
+data <- Read10X(data.dir = cfg$paths$data_dir)
 rownames(data) <- gsub("_", "-", rownames(data))
+df <- CreateSeuratObject(counts = data, project = cfg$project, min.cells = 3, min.features = 200)
 
-### Step 2: Initialize Seurat Object
-# Create a Seurat object with basic filtering for low-quality cells
-df <- CreateSeuratObject(counts = data, project = "sc_project", min.cells = 3, min.features = 200)
-
-# Clear large data object to free memory
-rm(data)
-
-### Step 3: Calculate Quality Control (QC) Metrics
-# Calculate mitochondrial gene percentage
 df[["percent.mt"]] <- PercentageFeatureSet(df, pattern = "^MT-")
-
-# Calculate ribosomal gene percentage
 df[["percent.rb"]] <- PercentageFeatureSet(df, pattern = "^RP[SL]")
 
-### Step 4: Visualize Initial QC Metrics
-# Violin plots for QC metrics to inspect distributions
-VlnPlot(df, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.rb"), 
-        ncol = 4, pt.size = 0.1, assay = "RNA", layer = "counts") +
-  ggtitle("Initial Quality Control Metrics")
+VlnPlot(df, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.rb"),
+        ncol = 4, pt.size = 0.1, layer = "counts")
 ```
 
-![Violin Plot of Quality Control Metrics](Visualizations/Pre_filter.png)
+![QC metrics before filtering](Visualizations/Pre_filter.png)
+
 ```r
-# Scatter plots for QC metric relationships
-plot1 <- FeatureScatter(df, feature1 = "nCount_RNA", feature2 = "percent.mt") + 
-  ggtitle("RNA Count vs Mitochondrial Percentage") + theme_minimal()
-
-plot2 <- FeatureScatter(df, feature1 = "nCount_RNA", feature2 = "nFeature_RNA") + 
-  ggtitle("RNA Count vs Feature Count") + theme_minimal()
-
-plot3 <- FeatureScatter(df, feature1 = "nCount_RNA", feature2 = "percent.rb") + 
-  ggtitle("RNA Count vs Ribosomal Percentage") + theme_minimal()
-
+plot1 <- FeatureScatter(df, feature1 = "nCount_RNA", feature2 = "percent.mt")
+plot2 <- FeatureScatter(df, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
+plot3 <- FeatureScatter(df, feature1 = "nCount_RNA", feature2 = "percent.rb")
 plot1 + plot2 + plot3
 ```
-![Scatter plots for QC metric relationships](Visualizations/QC_Metric_relationships.png)
-```r
-### Step 5: Filter Based on QC Metrics
-# Filter cells based on observed QC thresholds
-df <- subset(df, subset = nCount_RNA < 75000 & 
-                          nFeature_RNA < 5000 & 
-                          percent.mt < 15 & 
-                          percent.rb < 50)
 
-### Step 6: Visualize QC Metrics After Filtering
-# Violin plots for QC metrics post-filtering
-VlnPlot(df, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.rb"), 
-        ncol = 4, pt.size = 0.1, assay = "RNA", layer = "counts") +
-  ggtitle("Quality Control Metrics After Filtering")
+![QC metric relationships](Visualizations/QC_Metric_relationships.png)
+
+Cells are then filtered with the thresholds in `qc:` of the configuration. For the breast tumour data these were:
+
+```r
+df <- subset(df, subset = nCount_RNA < 75000 & nFeature_RNA < 5000 &
+                          percent.mt < 15 & percent.rb < 50)
 ```
-![ QC Metrics After Filtering](Visualizations/After_filtering.png)
 
+![QC metrics after filtering](Visualizations/After_filtering.png)
 
-## 2. Normalization and Identification of Highly Variable Genes
-Code:
+## 2. Normalisation and highly variable genes (`02_normalize_pca.R`)
+
+**Purpose.** Remove differences in sequencing depth between cells and select the genes with the highest biological variability, which are used for dimensional reduction.
+
 ```r
-### Step 1: Normalize the Data
-
-# Log-normalize the data
 df <- NormalizeData(df, normalization.method = "LogNormalize", scale.factor = 10000)
-
-### Step 2: Normalization and Identification of Highly Variable Features
-
-# Identify highly variable features using the 'vst' method
-df <- FindVariableFeatures(df, selection.method = "vst", nfeatures = 3000)
-
-# Extract the top 10 most highly variable genes
+df <- FindVariableFeatures(df, selection.method = "vst", nfeatures = 3000)  # 2000 for PBMC 3k
 top10 <- head(VariableFeatures(df), 10)
-print(top10)
-
-### Step 3: Visualize Highly Variable Features
-
-# Plot variable features with log transformation to handle zeros safely
-plot1 <- VariableFeaturePlot(df) + 
-  scale_x_continuous(trans = "log1p") + 
-  ggtitle("Highly Variable Features") + 
-  theme_minimal()
-
-# Label the top 10 variable genes
-plot2 <- LabelPoints(plot = plot1, points = top10, repel = TRUE, xnudge = 0, ynudge = 0, max.overlaps = 10)
-
-# Display the plot
-plot2
+LabelPoints(plot = VariableFeaturePlot(df), points = top10, repel = TRUE)
 ```
-![Highly Variable Genes](Visualizations/Highly_Variable_Features.png)
 
-## 3. Dimension Reduction : Principal Component Analysis (PCA) and Visualization
-Code:
+![Highly variable genes](Visualizations/Highly_Variable_Features.png)
+
+Setting `normalization$method: "SCT"` uses `SCTransform(vst.flavor = "v2")` with the mitochondrial fraction regressed out instead. Log-normalised RNA values are still computed, because marker detection and SingleR use them.
+
+## 3. Principal component analysis (`02_normalize_pca.R`)
+
+**Purpose.** Summarise the scaled expression of the variable genes in a small number of components that capture the main axes of variation between cells.
+
 ```r
-### Step: Principal Component Analysis (PCA) and Visualization
-
-#### Step 1: Scale the Data
-
-# Scale only the variable features to reduce noise and improve computation time
-df <- ScaleData(df, features = VariableFeatures(object = df))
-
-#### Step 2: Perform PCA
-
-# Run PCA on the scaled variable features
+df <- ScaleData(df, features = rownames(df))
 df <- RunPCA(df, features = VariableFeatures(object = df))
-
-#### Step 3: View Top Genes Contributing to PCs
-
-# Display the most important genes contributing to the top 6 principal components
-print("Top genes contributing to the first 6 principal components:")
-print(df[["pca"]], dims = 1:6, nfeatures = 5)
-
-#### Step 4: Visualize PCA Loadings
-
-# Plot the top 15 genes contributing to each of the first 6 PCs
-VizDimLoadings(df, dims = 1:6, nfeatures = 15, reduction = "pca") + 
-  ggtitle("Top Genes in PCA Loadings")
-```
-![Top Genes in PCA Loadings](Visualizations/PCA_loadings.png)
-```r
-#### Step 5: PCA Plot
-
-# Visualize the PCA results in a basic PCA plot
-DimPlot(df, reduction = "pca") + 
-  ggtitle("PCA Plot")
-```
-![PCA Plot](Visualizations/PCA_Plot.png)
-```r
-
-#### Step 6: Dimensional Heatmap
-
-# Dimensional heatmap for the first 2 PCs with a subset of 500 cells for clarity
+VizDimLoadings(df, dims = 1:6, nfeatures = 15, reduction = "pca")
+DimPlot(df, reduction = "pca")
 DimHeatmap(df, dims = 1:2, cells = 500, balanced = TRUE)
+ElbowPlot(df)
 ```
-![Dimensional heatmap](Visualizations/Dimheatmap_for_first_2_PC.png)
+
+![PCA loadings](Visualizations/PCA_loadings.png)
+
+![PCA](Visualizations/PCA_Plot.png)
+
+![Heatmap of PC1 and PC2](Visualizations/Dimheatmap_for_first_2_PC.png)
+
+![Elbow plot](Visualizations/ElbowPlot_PCA.png)
+
+The elbow plot guides the number of PCs used for clustering and embedding (`clustering$dims`, 10 in both configurations).
+
+## 4. Clustering, UMAP and t-SNE (`03_cluster_umap.R`)
+
+**Purpose.** Group transcriptionally similar cells and embed them in two dimensions for visualisation. A shared-nearest-neighbour graph is built on the first 10 PCs and partitioned with the Louvain algorithm at resolution 0.5.
+
 ```r
-
-#### Step 7: Determine Optimal Number of PCs
-
-# Elbow plot to determine the optimal number of principal components
-ElbowPlot(df) + 
-  ggtitle("Elbow Plot - PCA")
-```
-![Dimensional heatmap](Visualizations/ElbowPlot_PCA.png)
-
-
-## 4. Clustering the Cells
-Code:
-```r
-### Step: Clustering and Dimensional Reduction
-
-#### Step 1: Find Neighbors and Identify Clusters
-
-# Identify neighbors using the first 10 principal components
 df <- FindNeighbors(df, dims = 1:10)
-
-# Perform clustering with a resolution of 0.5
 df <- FindClusters(df, resolution = 0.5)
-
-# Display cluster IDs for the first 5 cells
-head(Idents(df), 5)
-
-#### Step 2: Run Dimensional Reduction (UMAP and t-SNE)
-
-# Run UMAP for non-linear dimensional reduction
-df <- RunUMAP(df, dims = 1:10, verbose = FALSE)
-
-# Run t-SNE for an alternative dimensional reduction
-df <- RunTSNE(df, dims = 1:10, verbose = FALSE)
-
-#### Step 3: Explore Cluster Metadata
-
-# Display the number of cells per cluster
-table(df@meta.data$seurat_clusters)
-
-#### Step 4: Visualize Clusters Using UMAP and t-SNE
-
-# UMAP plot with cluster labels
-DimPlot(df, reduction = "umap", label = TRUE, repel = TRUE) + 
-  ggtitle("UMAP of Clusters")
+df <- RunUMAP(df, dims = 1:10)
+df <- RunTSNE(df, dims = 1:10)
+DimPlot(df, reduction = "umap", label = TRUE, repel = TRUE)
 ```
-![UMAP plot with cluster labels](Visualizations/UMAP_Clusters.png)
+
+![UMAP of clusters](Visualizations/UMAP_Clusters.png)
+
+![t-SNE of clusters](Visualizations/t-SNE_Clusters.png)
+
+## 5. Cluster marker genes (`04_markers.R`)
+
+**Purpose.** Identify genes enriched in each cluster relative to all other cells. The test is a Wilcoxon rank-sum test on log-normalised data, and Seurat reports Bonferroni-adjusted p-values. Only positive markers detected in at least 25% of cells of the cluster are kept, with padj < 0.05.
+
 ```r
-# t-SNE plot with cluster labels
-DimPlot(df, reduction = "tsne", label = TRUE, repel = TRUE) + 
-  ggtitle("t-SNE of Clusters")
-```
-![t-SNE plot with cluster labels](Visualizations/t-SNE_Clusters.png)
-
-## 5. Finding Cluster-Specific Marker Genes
-Code:
-```r
-### Step: Identify Cluster-Specific Markers
-
-#### Step 1: Find Markers for Cluster 1
-
-# Identify markers for cluster 1 with a minimum expression percentage of 25%
 cluster1.markers <- FindMarkers(df, ident.1 = 1, min.pct = 0.25)
-
-# Display the top 5 markers for cluster 1
-head(cluster1.markers, n = 5)
-
-#### Step 2: Visualize Top Markers for Cluster 1
-
-# Violin plot for the top 2 markers of cluster 1
-VlnPlot(df, features = c(row.names(cluster1.markers)[1], row.names(cluster1.markers)[2]))
+VlnPlot(df, features = rownames(cluster1.markers)[1:2])
 ```
-![Violin plot for the top 2 markers of cluster 1](Visualizations/Violin_plot_for_top_2_markers_of_cluster_1.png)
-```r
-#### Step 3: Find Markers for All Clusters
 
-# Identify markers for all clusters with a log-fold change threshold of 0.5
+![Top 2 markers of cluster 1](Visualizations/Violin_plot_for_top_2_markers_of_cluster_1.png)
+
+```r
 df.markers <- FindAllMarkers(df, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.5) %>%
-  filter(p_val_adj < 0.05)  # Optional: Filter markers by adjusted p-value
-
-#### Step 4: Identify Top Markers for Each Cluster
-
-# Get the top 3 marker genes for each cluster based on average log-fold change
-top_markers <- df.markers %>% 
-  group_by(cluster) %>% 
-  top_n(n = 3, wt = avg_log2FC)
+  filter(p_val_adj < 0.05)
+top_markers <- df.markers %>% group_by(cluster) %>% top_n(n = 3, wt = avg_log2FC)
 ```
 
-## 6. Plotting Marker Genes
-Code:
+Tables: `markers_cluster1.csv`, `markers_all_clusters.csv`, `markers_top10_per_cluster.csv`.
+
+## 6. Marker gene plots (`04_markers.R`)
+
+**Purpose.** Show where marker genes are expressed in the embedding: the top marker of each cluster, canonical markers of expected cell types (listed under `markers$known` in the configuration), a dot plot of the top three markers per cluster and a heatmap of the top ten.
+
 ```r
-### Step: Visualize Marker Genes on UMAP
-
-#### Step 1: Plot Top Marker Gene of Each Cluster
-
-# Identify the top marker gene for each cluster
-top_markers_1 <- df.markers %>% 
-  group_by(cluster) %>% 
-  top_n(n = 1, wt = avg_log2FC)
-
-# Plot the top marker genes for the first 12 clusters in groups of 4
-FeaturePlot(df, features = top_markers_1$gene[1:4])
-FeaturePlot(df, features = top_markers_1$gene[5:8])
-FeaturePlot(df, features = top_markers_1$gene[9:12])
+top_markers_1 <- df.markers %>% group_by(cluster) %>% top_n(n = 1, wt = avg_log2FC)
+FeaturePlot(df, features = top_markers_1$gene)
+FeaturePlot(df, "COL6A2") + scale_colour_gradientn(colours = rev(brewer.pal(n = 11, name = "Spectral")))
 ```
+
 ![Top marker genes](Visualizations/Top_marker_genes.png)
-```r
-#### Step 2: Visualize Known Cell Type Markers from PanglaoDB
 
-# Plot for Fibroblasts (COL6A2)
-FeaturePlot(df, "COL6A2") + 
-  scale_colour_gradientn(colours = rev(brewer.pal(n = 11, name = "Spectral"))) + 
-  ggtitle("COL6A2: Fibroblasts")
-```
-![Fibroblasts](Visualizations/Fibroblasts.png)
-```r
+Canonical markers in the breast tumour data: COL6A2 (fibroblasts), IL7R (CD4 T cells) and KRT14 (basal epithelial cells).
 
-# Plot for T Cells (IL7R)
-FeaturePlot(df, "IL7R") + 
-  scale_colour_gradientn(colours = rev(brewer.pal(n = 11, name = "Spectral"))) + 
-  ggtitle("IL7R: CD4 T Cells")
-```
-![T Cells](Visualizations/T_Cells.png)
-```r
+![COL6A2](Visualizations/Fibroblasts.png)
 
-# Plot for Epithelial Cells (KRT14)
-FeaturePlot(df, "KRT14") + 
-  scale_colour_gradientn(colours = rev(brewer.pal(n = 11, name = "Spectral"))) + 
-  ggtitle("KRT14: Epithelial Cells")
-```
-![Epithelial Cells](Visualizations/Epithelial_Cells.png)
-```r
+![IL7R](Visualizations/T_Cells.png)
 
-#### Step 3: Plot Top 3 Marker Genes for Specific Clusters
+![KRT14](Visualizations/Epithelial_Cells.png)
 
-# Plot top 3 marker genes for cluster 0
-filtered_x <- top_markers %>% filter(cluster == 0)
-FeaturePlot(df, features = filtered_x$gene[1:3])
-```
-![Top 3 marker genes for cluster 0](Visualizations/Top_3_marker_genes_for_cluster_0.png)
+![Top 3 markers of cluster 0](Visualizations/Top_3_marker_genes_for_cluster_0.png)
+
+![Top 3 markers of cluster 3](Visualizations/Top_3_marker_genes_for_cluster_3.png)
+
+For PBMC 3k, the configured markers are IL7R, CCR7, CD8A, MS4A1, CD14, FCGR3A, GNLY, FCER1A and PPBP.
+
+## 7. Cell type annotation with SingleR (`05_annotation_singler.R`)
+
+**Purpose.** Assign each cell the reference cell type whose expression profile it correlates with best, independently of the clustering. Two celldex references are used: the Human Primary Cell Atlas and Blueprint/ENCODE (`label.main`). SingleR prunes low-confidence assignments. The consensus label is the Human Primary Cell Atlas label, or the Blueprint/ENCODE label for cells whose first label was pruned.
 
 ```r
-# Plot top 3 marker genes for cluster 3
-filtered_x <- top_markers %>% filter(cluster == 3)
-FeaturePlot(df, features = filtered_x$gene[1:3])
-```
-![Top 3 marker genes for cluster 3](Visualizations/Top_3_marker_genes_for_cluster_3.png)
-
-
-
-## 7. Cell Type Annotation
-Code:
-```r
-#### Step 1: Load Multiple Reference Datasets for Annotation
-
-# Load Human Primary Cell Atlas reference
 ref_human_primary <- celldex::HumanPrimaryCellAtlasData()
-
-# Load Blueprint/ENCODE reference for additional coverage of immune cells
 ref_blueprint <- celldex::BlueprintEncodeData()
+test <- GetAssayData(df, assay = "RNA", layer = "data")   # log-normalised counts
 
-# Inspect reference datasets
-print(ref_human_primary)
-print(ref_blueprint)
+results_primary <- SingleR(test = test, ref = ref_human_primary, labels = ref_human_primary$label.main)
+results_blueprint <- SingleR(test = test, ref = ref_blueprint, labels = ref_blueprint$label.main)
 
-#### Step 2: Convert Seurat Object to SingleCellExperiment
-
-# Convert Seurat object to SingleCellExperiment using DietSeurat to save memory
-sce <- as.SingleCellExperiment(DietSeurat(df))
-
-#### Step 3: Run SingleR for Cell Type Annotation Using Multiple References
-
-# Run SingleR with Human Primary Cell Atlas reference
-results_primary <- SingleR(test = sce, assay.type.test = 1, ref = ref_human_primary, labels = ref_human_primary$label.main)
-
-# Run SingleR with Blueprint/ENCODE reference for comparison
-results_blueprint <- SingleR(test = sce, assay.type.test = 1, ref = ref_blueprint, labels = ref_blueprint$label.main)
-
-#### Step 4: Compare and Consolidate Annotations
-
-# Create a consensus annotation by comparing the two results
-results_consensus <- ifelse(!is.na(results_primary$pruned.labels), 
-                            results_primary$pruned.labels, 
-                            results_blueprint$pruned.labels)
-
-# Add annotations to the Seurat object metadata
-df@meta.data$celltype_primary <- results_primary$pruned.labels
-df@meta.data$celltype_blueprint <- results_blueprint$pruned.labels
-df@meta.data$celltype_consensus <- results_consensus
-
-#### Step 5: Assess Annotation Confidence
-
-# Plot annotation scores to visualize confidence levels
-plotScoreHeatmap(results_primary, main = "Annotation Scores - Human Primary Cell Atlas")
-```
-![ScoreHeatmap](Visualizations/ScoreHeatmap_Human_primary_cell_atlas.png)
-```r
-plotScoreHeatmap(results_blueprint, main = "Annotation Scores - Blueprint/ENCODE")
-```
-![ScoreHeatmap](Visualizations/ScoreHeatmap_Blueprint.png)
-```r
-#### Step 6: Visualize Annotations and Save Plots
-
-# Set Seurat object identities to consensus cell types and visualize with UMAP
-png("Consensus_Annotations.png", width = 2000, height = 1500, res = 300)
-df <- SetIdent(df, value = "celltype_consensus")
-DimPlot(df, label = TRUE, repel = TRUE, label.size = 3) + NoLegend() + 
-  ggtitle("Consensus Cell Type Annotations")
-dev.off()
-```
-![Plot - Consensus Cell Type Annotations](Visualizations/Consensus_Annotations.png)
-```r
-
-# Visualize and save plot for Human Primary Cell Atlas annotations
-png("HumanPrimaryCellAtlas_Annotations.png", width = 2000, height = 1500, res = 300)
-df <- SetIdent(df, value = "celltype_primary")
-DimPlot(df, label = TRUE, repel = TRUE, label.size = 3) + NoLegend() + 
-  ggtitle("Human Primary Cell Atlas Annotations")
-dev.off()
-```
-![Plot - Human Primary Cell Atlas Annotations](Visualizations/HumanPrimaryCellAtlas_Annotations.png)
-```r
-
-# Visualize and save plot for Blueprint/ENCODE annotations
-png("BlueprintEncode_Annotations.png", width = 2000, height = 1500, res = 300)
-df <- SetIdent(df, value = "celltype_blueprint")
-DimPlot(df, label = TRUE, repel = TRUE, label.size = 3) + NoLegend() + 
-  ggtitle("Blueprint/ENCODE Annotations")
-dev.off()
-```
-![Plot - Blueprint/ENCODE Annotations](Visualizations/BlueprintEncode_Annotations.png)
-```r
-
-#### Step 7: Verify Cell Type Annotations
-
-# Check levels of the consensus annotations
-levels(df)
-
-# Display the number of cells in each annotation
-table(df@meta.data$celltype_consensus)
-
+results_consensus <- ifelse(!is.na(results_primary$pruned.labels),
+                            results_primary$pruned.labels, results_blueprint$pruned.labels)
+df$celltype_consensus <- results_consensus
+plotScoreHeatmap(results_primary)
 ```
 
-## 8. Identifying Different Cell Types Within a Cluster
-Code:
+![SingleR scores, HPCA](Visualizations/ScoreHeatmap_Human_primary_cell_atlas.png)
+
+![SingleR scores, Blueprint/ENCODE](Visualizations/ScoreHeatmap_Blueprint.png)
+
+![Consensus annotation](Visualizations/Consensus_Annotations.png)
+
+![HPCA annotation](Visualizations/HumanPrimaryCellAtlas_Annotations.png)
+
+![Blueprint/ENCODE annotation](Visualizations/BlueprintEncode_Annotations.png)
+
+Neither reference contains tumour-specific epithelial states. In the breast tumour data, labels such as "Gametocytes", "Neurons" or "iPS cells" on epithelial clusters reflect the nearest available reference profile, not the presence of those cell types. Labels should be checked against the cluster markers from sections 5-6. Tables: `singler_labels_per_cell.csv`, `singler_consensus_by_cluster.csv`, `celltype_counts.csv`.
+
+## 8. T and NK cell sub-populations (`06_subcluster_analysis.R`)
+
+**Purpose.** Resolve lymphocyte subsets within the annotated T and NK compartment. Cells with T or NK consensus labels (regular expression `subclusters$t_nk_pattern`) are subset. Markers are computed between their labels (min.pct 0.5, log2FC > 0.5), and the cells are re-annotated with the fine-grained Human Primary Cell Atlas labels (`label.fine`).
+
 ```r
-#identifying the different cell types of T/NK cells
-
-#### Step 1: Subset T and NK Cells
-
-# Subset Seurat object to include only CD4+ T-cells, CD8+ T-cells, and NK cells
-T_df <- subset(df, idents = c("CD4+ T-cells", "CD8+ T-cells", "NK cells"))
-
-#### Step 2: Identify Markers for T/NK Cell Subclusters
-# Find markers for T/NK cell subclusters with stringent criteria
+T_df <- subset(df, cells = t_nk_cells)
+Idents(T_df) <- "celltype_consensus"
 T_df.markers <- FindAllMarkers(T_df, only.pos = TRUE, min.pct = 0.5, logfc.threshold = 0.5)
-
-# Display the top 5 markers per cluster for an overview
-top_markers <- T_df.markers %>% group_by(cluster) %>% top_n(n = 5, wt = avg_log2FC)
-print(top_markers)
-
-#### Step 3: Visualize T/NK Cell Clusters on UMAP
-
-# Visualize T/NK cells with cluster labels
-DimPlot(T_df, label = TRUE, repel = TRUE, label.size = 3) + 
-  ggtitle("T/NK Cell Clusters") + 
-  NoLegend()
+results_T.fine <- SingleR(test = GetAssayData(T_df, layer = "data"), ref = ref_human_primary,
+                          labels = ref_human_primary$label.fine)
 ```
-![T/NK Cell Clusters on UMAP](Visualizations/T_NK_Cell_Clusters.png)
+
+![T/NK cells](Visualizations/T_NK_Cell_Clusters.png)
+
+![Top 3 T/NK markers](Visualizations/T_NK_Top3_Markers.png)
+
+![Fine-grained T/NK annotation](Visualizations/T_NK_FineGrained_Annotations.png)
+
+Tables: `T_NK_markers.csv`, `T_NK_fine_annotation_counts.csv`.
+
+## 9. Marker genes between myeloid cell types (`06_subcluster_analysis.R`)
+
+**Purpose.** Compare myeloid populations (monocytes, macrophages, dendritic cells, neutrophils; `subclusters$myeloid_pattern`) directly with each other. The subset is re-normalised with SCTransform v2, so that the variance model is fitted on the myeloid cells only, and markers are computed on the SCT assay.
+
 ```r
-
-#### Step 4: Plot Top 3 Genes with Highest Expression
-
-# Identify the top 3 genes with the highest average expression
-top3_genes <- T_df.markers %>% top_n(n = 3, wt = avg_log2FC)
-print(top3_genes)
-
-# UMAP visualization for the top 3 marker genes
-png("T_NK_Top3_Markers.png", width = 2500, height = 1500, res = 300)
-FeaturePlot(T_df, features = top3_genes$gene, ncol = 3)
-dev.off()
-```
-![T/NK Cell Clusters on UMAP](Visualizations/T_NK_Top3_Markers.png)
-```r
-#### Step 5: Fine-Grained Annotation of T/NK Cells Using SingleR
-
-# Convert Seurat object to SingleCellExperiment for SingleR annotation
-sce_T <- as.SingleCellExperiment(DietSeurat(T_df))
-
-# Load relevant reference dataset for fine-grained annotation
-ref <- celldex::HumanPrimaryCellAtlasData()  # Replace with other references if needed
-
-# Run SingleR for fine-grained annotation
-results_T.fine <- SingleR(test = sce_T, assay.type.test = 1, ref = ref, labels = ref$label.fine)
-
-# Add annotations to the Seurat object metadata
-T_df@meta.data$results_T.fine <- results_T.fine$pruned.labels
-
-#### Step 6: Explore and Save Fine-Grained Annotations
-
-# Display the distribution of different cell types in T/NK cells
-T_NK_cell_types <- table(results_T.fine$pruned.labels)
-print(T_NK_cell_types)
-
-# Save the cell type counts as a CSV file
-write.csv(T_NK_cell_types, file = "T_NK_cells.csv", quote = FALSE, row.names = TRUE)
-
-#### Step 7: Visualize Fine-Grained Annotations on UMAP
-
-# Set the identities to the fine-grained annotations
-T_df <- SetIdent(T_df, value = "results_T.fine")
-
-# UMAP plot with fine-grained cell type labels
-png("T_NK_FineGrained_Annotations.png", width = 2000, height = 1500, res = 300)
-DimPlot(T_df, label = TRUE, repel = TRUE, label.size = 3) + 
-  ggtitle("Fine-Grained Annotation of T/NK Cells") + 
-  NoLegend()
-dev.off()
-```
-![Fine-Grained Annotations on UMAP](Visualizations/T_NK_FineGrained_Annotations.png)
-
-## 9. Identifying differential marker genes
-Code:
-```r
-#### Step 1: Subset Myeloid Cells
-# Set the active identity class to 'celltype_consensus'
-df <- SetIdent(df, value = "celltype_consensus")
-
-# Check the new levels
-levels(df)
-
-# Subset Seurat object to include only myeloid-related cells
-# Subset using celltype_consensus identities
-myeloid <- subset(df, idents = c("Monocyte", "Neutrophils", "Macrophage", "Erythroblast", "Platelets"))
-
-#### Step 2: Normalize and Identify Variable Features
-# Set default assay to RNA
-DefaultAssay(myeloid) <- "RNA"
-
-# Normalize the data using SCTransform for better variance stabilization
-myeloid <- SCTransform(myeloid, verbose = FALSE)
-
-# Identify the top 2000 most variable features
-myeloid <- FindVariableFeatures(myeloid, selection.method = "vst", nfeatures = 2000)
-
-#### Step 3: Scale the Data
-# Scale the data using variable features
-myeloid <- ScaleData(myeloid, features = VariableFeatures(myeloid))
-
-#### Step 4: Differential Expression Analysis
-
-# Perform differential expression analysis for myeloid cells
-# Compare Monocytes, Neutrophils, Macrophages, Erythrocytes, and Platelets
-myeloid.markers <- FindAllMarkers(
-  myeloid, 
-  only.pos = TRUE, 
-  min.pct = 0.5, 
-  logfc.threshold = 0.5,
-  assay = "SCT"  # Use the SCTransform assay
-)
-
-# Display the top 5 markers per cluster for an overview
-top_markers <- myeloid.markers %>% group_by(cluster) %>% top_n(n = 5, wt = avg_log2FC)
-print(top_markers)
-
-#### Step 5: Identify and Save Top 10 Markers per Cluster
-
-# Get the top 10 markers per cluster
+myeloid <- SCTransform(myeloid, vst.flavor = "v2")
+myeloid.markers <- FindAllMarkers(myeloid, assay = "SCT", only.pos = TRUE,
+                                  min.pct = 0.5, logfc.threshold = 0.5)
 myeloid_top10_markers <- myeloid.markers %>% group_by(cluster) %>% top_n(n = 10, wt = avg_log2FC)
-
-# Save the top 10 markers to a CSV file
-write.csv(myeloid_top10_markers, file = "myeloid_top10_markers.csv", quote = FALSE, row.names = FALSE)
-
-#### Save Violin Plot of Top 5 Markers per Cluster
-VlnPlot(myeloid, features = unique(myeloid_top10_markers$gene[1:5]), ncol = 2, pt.size = 0.1) 
 ```
-![Violin Plot of Top 5 Markers per Cluster](Visualizations/Myeloid_Top5_Markers_ViolinPlot.png)
+
+![Myeloid markers](Visualizations/Myeloid_Top5_Markers_ViolinPlot.png)
+
+Tables: `myeloid_markers.csv`, `myeloid_top10_markers.csv`. Labels with fewer than three cells are dropped before testing. An analysis is skipped, with a message, if fewer than `subclusters$min_cells` cells or fewer than two labels remain.
+
+## Testing
+
+GitHub Actions (`.github/workflows/pbmc3k-pipeline.yml`) installs the dependencies, downloads PBMC 3k and runs steps 00-06 on every push. The figures and tables are kept as a workflow artifact.
+
+## References
+
+1. Hao Y, Stuart T, Kowalski MH, et al. (2024). Dictionary learning for integrative, multimodal and scalable single-cell analysis. *Nature Biotechnology* 42:293-304. doi:10.1038/s41587-023-01767-y
+2. Aran D, Looney AP, Liu L, et al. (2019). Reference-based analysis of lung single-cell sequencing reveals a transitional profibrotic macrophage. *Nature Immunology* 20:163-172. doi:10.1038/s41590-018-0276-y
+3. Choudhary S, Satija R (2022). Comparison and evaluation of statistical error models for scRNA-seq. *Genome Biology* 23:27. doi:10.1186/s13059-021-02584-9
+4. Qian J, Olbrecht S, Boeckx B, et al. (2020). A pan-cancer blueprint of the heterogeneous tumor microenvironment revealed by single-cell profiling. *Cell Research* 30:745-762. doi:10.1038/s41422-020-0355-0
 
 ## Author
 
 Sourabh Kumar · [bioinfosourabh@gmail.com](mailto:bioinfosourabh@gmail.com) · [bioinfosourabh.netlify.app](https://bioinfosourabh.netlify.app) · ORCID [0009-0009-5840-9830](https://orcid.org/0009-0009-5840-9830)
 
-For questions, suggestions or issues, please open an issue or email me.
+For questions or suggestions, please open an issue or send an email.
