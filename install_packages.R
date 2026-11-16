@@ -10,7 +10,7 @@ if (length(cran_repo) == 0 || is.na(cran_repo) || cran_repo == "@CRAN@") {
 }
 ncpus <- max(1L, parallel::detectCores() - 1L)
 
-cran <- c("Seurat", "SeuratObject", "Matrix", "dplyr", "ggplot2", "patchwork", "viridis",
+cran <- c("Seurat", "SeuratObject", "Matrix", "dplyr", "ggplot2", "patchwork", "viridis", "pheatmap",
           "RColorBrewer", "yaml", "remotes", "BiocManager")
 bioc <- c("SingleR", "celldex", "SingleCellExperiment", "SummarizedExperiment",
           "glmGamPoi")   # glmGamPoi speeds up SCTransform v2
